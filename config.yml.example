@@ -1,2 +1,5 @@
 token: ""  # Discord login token
 owner_id: ""  # Your user ID
+
+home_server: ""  # "Home" server ID with logging channel
+log_channel: ""  # Channel ID to log messages to
