@@ -28,7 +28,8 @@ SECTION_REGEX = re.compile(r"[\d]+[\\/]?")
 DEFAULT_CONFIG = {
     "control_chars": "->",
     "info_channel": None,
-    "update_immediately": False
+    "update_immediately": False,
+    "messages": []
 }
 
 DEFAULT_SECTIONS = [
@@ -129,3 +130,17 @@ class DataManager:
         log.info("Added server: {}".format(server_id))
 
         return True
+
+    # Convenience functions
+
+    def get_server_command_chars(self, server):
+        return self.data[server.id]["config"]["control_chars"]
+
+    def get_section(self, server, section):
+        sections = self.data[server.id]["sections"]
+
+        for name, s in sections:
+            if name.lower() == section.lower():
+                return s
+
+        return None
