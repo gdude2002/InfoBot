@@ -17,6 +17,9 @@ more static channels too.
 * `python -m pip install -r requirements.txt`
 * Copy `config.yml.example` to `config.yml` and fill it out
 * `python -m bot`
+    * `--debug` for debug-level logging
+    * `--no-log-discord` to prevent log messages from being relayed to Discord
+        * Note that `DEBUG`-level messages and messages from the `asyncio` logger are never relayed to Discord
 
 ---
 
