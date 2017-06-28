@@ -15,11 +15,10 @@ def main():
         filename="output.log", encoding="utf-8", mode="w"
     )
 
-    if "--no-log-discord" not in sys.argv:
-        discord_handler = DiscordLogHandler(client)
-        handlers = [discord_handler, file_handler, logging.StreamHandler()]
-    else:
+    if "--no-log-discord" in sys.argv:
         handlers = [file_handler, logging.StreamHandler()]
+    else:
+        handlers = [DiscordLogHandler(client), file_handler, logging.StreamHandler()]
 
     logging.basicConfig(
         format="%(asctime)s | %(name)10s | %(levelname)8s | %(message)s",

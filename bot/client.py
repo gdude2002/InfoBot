@@ -73,6 +73,9 @@ class Client(discord.client.Client):
 
         self.loop.call_soon_threadsafe(asyncio.async, inner())
 
+    def sections_updated(self, server):
+        pass
+
     async def on_ready(self):
         log.info("Setting up...")
         self.data_manager.load()

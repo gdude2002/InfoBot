@@ -18,8 +18,9 @@ class TextSection(BaseSection):
         if command == "set":
             if len(data[0]) < 1000:
                 self.text = data[0]
+                client.sections_updated(message.server)
                 return "Section data set"
-            return "Section data must be less than 1000 characters"
+            return "Section data must be shorter than 1000 characters"
 
         return "Unknown command: {}".format(command)
 

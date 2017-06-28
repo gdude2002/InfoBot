@@ -27,7 +27,8 @@ SECTION_REGEX = re.compile(r"[\d]+[\\/]?")
 
 DEFAULT_CONFIG = {
     "control_chars": "->",
-    "info_channel": None
+    "info_channel": None,
+    "update_immediately": False
 }
 
 DEFAULT_SECTIONS = [
