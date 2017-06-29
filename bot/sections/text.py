@@ -12,20 +12,37 @@ class TextSection(BaseSection):
     def __init__(self, name, text=None):
         super().__init__(name)
 
-        self.text = text or ""
+        self.text = text or []
 
-    def process_command(self, command, data, client, message) -> str:
-        if command == "set":
-            if len(data[0]) < 1000:
-                self.text = data[0]
+    def process_command(self, command, data, data_string, client, message) -> str:
+        if command == "add":
+            if len(data) < 1:
+                return "Usage: `add \"Section Text\"`"
+
+            if data[0] and len(data[0]) < 1000:
+                self.text.append(data[0])
                 client.sections_updated(message.server)
-                return "Section data set"
+                return "Section data added"
             return "Section data must be shorter than 1000 characters"
+        elif command == "remove":
+            if not data:
+                return "Usage: `delete <message index>`\n\nNote that indexes start at `0`"
 
-        return "Unknown command: {}".format(command)
+            try:
+                index = int(data[0])
+            except:
+                return "Usage: `delete <message index>`\n\nNote that indexes start at `0`"
+
+            if index >= len(self.text):
+                return "Unknown index: `{}`\n\nNote that indexes start at `0`".format(index)
+
+            self.text.pop(index)
+            return "Data at index `{}` removed".format(index)
+
+        return "Unknown command: `{}`\n\nAvailable commands: `add`, `remove`, `swap`".format(command)
 
     def render(self) -> List[str]:
-        return [self.text]
+        return self.text
 
     def to_dict(self) -> dict:
         return {

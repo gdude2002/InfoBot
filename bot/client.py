@@ -1,19 +1,15 @@
 # coding=utf-8
 import datetime
+import traceback
 
-import aiohttp
 import asyncio
 import discord
 import logging
-from ruamel import yaml
+import shlex
 
-import json
-import os
-
-import traceback
 from aiohttp import ServerDisconnectedError
-from discord import Object, Embed, Colour, Member
-from discord import Status
+from discord import Embed, Colour
+from ruamel import yaml
 
 from bot.data import DataManager
 
@@ -27,6 +23,22 @@ LOG_COLOURS = {
     logging.ERROR: Colour.red(),
     logging.CRITICAL: Colour.dark_red()
 }
+
+CONFIG_KEY_DESCRIPTIONS = {
+    "control_chars": "Characters that all commands must be prefixed with. You can always mention me as well instead.",
+    "info_channel": "ID for the currently-configured info channel. Use the `setup` command if you want to change this."
+}
+
+WELCOME_MESSAGE = [
+    """
+Hello! I was invited to this server to manage an info-channel.
+
+Please use `!setup <channel ID>` to specify which channel to manage, or `!help` for more information on how I work.
+
+Note: Management commands require the **Manage Server** permission. Issues can be reported to \
+<https://github.com/gdude2002/InfoBot>.
+    """
+]
 
 HELP_MESSAGES = [
     """
@@ -43,20 +55,26 @@ new information.
 
 InfoBot uses a section-based model to generate the content of the info channel for you. There are multiple types of \
 section, and each may be configured individually for your needs.
+
+Note that section names are used as both identifiers and section headers!
     """,
     """
 __**Commands**__
 All commands (except for `help`) require the "Manage Server" permission.
 
-• `config [<option> <value>]`: Set the value for a config option. Omit `option` and `value` to see the current config.
-• `create <type> <section name>`: Create a new section - see below for supported types.
-• `help`: This help message!
-• `remove <section name>`: Remove a section 
-• `section <command> || <section name> || <data>`: Run a section-specific command - see below for more details
-• `setup [channel ID]`: Specify an info channel to manage - omit to create a default `#info` channel
-• `update`: Reset the info channel and refill it with the latest changes
+Note that command arguments support spaces - just `"surround them with double quotes"` and they'll be counted \
+as a single argument. Quotes are given below for arguments you might expect to need them.
 
-There are no information-listing commands - all of the data you need for these commands is listed in the info channel!
+Commands must be prefixed - the default prefix is `!`, but server settings may vary. You can always mention me instead \
+of using a prefix!
+
+• `config [<option> <value>]`: Set the value for a config option. Omit `option` and `value` to see the current config.
+• `create <section type> "<section name>"`: Create a new section - see below for supported types.
+• `help`: This help message!
+• `remove "<section name>"`: Remove a section 
+• `section <command> "<section name>" <data>`: Run a section-specific command - see below for more details
+• `setup <channel ID>`: Specify an info channel to manage
+• `update`: Reset the info channel and refill it with the latest changes
     """,
     """
 __**Section types**__
@@ -115,8 +133,13 @@ class Client(discord.client.Client):
 
         self.loop.call_soon_threadsafe(asyncio.async, inner())
 
+    async def close(self):
+        log.info("Shutting down...")
+        self.data_manager.save()
+        await discord.client.Client.close(self)
+
     def sections_updated(self, server):
-        pass
+        self.data_manager.save_server(server.id)
 
     async def on_ready(self):
         log.info("Setting up...")
@@ -129,7 +152,9 @@ class Client(discord.client.Client):
 
     async def on_server_join(self, server):
         self.data_manager.add_server(server.id)
-        # TODO: Initial setup and help message
+
+        for message in WELCOME_MESSAGE:
+            await self.send_message(server.default_channel, content=message)
 
     async def on_message(self, message):
         if message.server is None:
@@ -151,40 +176,204 @@ class Client(discord.client.Client):
             ))
 
         chars = self.data_manager.get_server_command_chars(message.server)
+        text = None
+
         if message.content.startswith(chars):  # It's a command
             text = message.content[len(chars):].strip()
+        elif message.content.startswith(self.user.mention):
+            text = message.content[len(self.user.mention):].strip()
+
+        if text:
             if " " in text:
-                command, data = text.split(" ")
+                command, args = text.split(" ", 1)
             else:
                 command = text
+                args = ""
+
+            args_string = args
+            args = shlex.split(args)
+
+            if len(args) > 0:
+                data = args[0:]
+            else:
                 data = ""
 
+            log.debug("Command: {}".format(repr(command)))
+            log.debug("Args: {}".format(repr(args)))
+            log.debug("Args string: {}".format(repr(args_string)))
+            log.debug("Data: {}".format(repr(data)))
+
             if hasattr(self, "command_{}".format(command)):
-                await getattr(self, "command_{}".format(command))(data, message)
+                await getattr(self, "command_{}".format(command))(data, args_string, message)
+
+    async def clear_channel(self, channel):
+        current_index = None
+        last_index = None
+        num_errors = 0
+
+        while current_index != -1:
+            if num_errors >= 5:
+                break
+
+            try:
+                async for message in self.logs_from(channel, before=current_index):
+                    current_index = message
+                    await self.delete_message(message)
+            except ServerDisconnectedError:
+                try:
+                    async for message in self.logs_from(channel, before=current_index):
+                        current_index = message
+                        await self.delete_message(message)
+                except Exception:
+                    num_errors += 1
+                    continue
+            except Exception:
+                num_errors += 1
+                continue
+
+            if last_index == current_index:
+                break
+
+            last_index = current_index
 
     # region Commands
 
-    async def command_config(self, data, message):
-        pass
+    async def command_config(self, data, data_string, message):
+        if not message.author.server_permissions.manage_server:
+            return log.debug("Permission denied")  # No perms
 
-    async def command_create(self, data, message):
-        pass
+        if len(data) < 1:
+            config = self.data_manager.get_config(message.server)
 
-    async def command_help(self, data, message):
+            md = "__**Current configuration**__\n\n"
+
+            for key, value in config.items():
+                md += "**{}**: `{}`\n".format(key, value)
+
+            await self.send_message(
+                message.channel, "{}\n\n{}".format(message.author.mention, md)
+            )
+
+        elif len(data) < 2:
+            config = self.data_manager.get_config(message.server)
+            key = data[0].lower()
+
+            if key not in config:
+                return await self.send_message(
+                    message.channel, "{} Unknown key: `{}`".format(message.author.mention, key)
+                )
+
+            await self.send_message(
+                message.channel, "{} **{}** is set to `{}`\n\n**Info**: {}".format(
+                    message.author.mention, key, config[key], CONFIG_KEY_DESCRIPTIONS[key]
+                )
+            )
+        else:
+            config = self.data_manager.get_config(message.server)
+            key, value = data[0].lower(), data[1]
+
+            if key == "info_channel":
+                return await self.send_message(
+                    message.channel, "{} Please use the `setup` command to change the info channel instead.".format(
+                        message.author.mention
+                    )
+                )
+
+            if key not in config:
+                return await self.send_message(
+                    message.channel, "{} Unknown key: `{}`".format(message.author.mention, key)
+                )
+
+            self.data_manager.set_config(message.server, key, value)
+            self.data_manager.save_server(message.server.id)
+
+            await self.send_message(
+                message.channel, "{} **{}** is now set to `{}`".format(
+                    message.author.mention, key, value
+                )
+            )
+
+    async def command_create(self, data, data_string, message):
+        if not message.author.server_permissions.manage_server:
+            return log.debug("Permission denied")  # No perms
+
+        if len(data) < 2:
+            return await self.send_message(
+                message.channel, "{} Usage: `create <section type> \"<section name>\"`".format(message.author.mention)
+            )
+
+        section_type, section_name = data[0], data[1]
+
+        if self.data_manager.get_section(message.server, section_name):
+            return await self.send_message(
+                message.channel, "{} A section named `{}` already exists".format(
+                    message.author.mention, section_name
+                )
+            )
+
+        clazz = self.data_manager.get_section_class(section_type)
+
+        if not clazz:
+            return await self.send_message(
+                message.channel, "{} Unknown section type: `{}`".format(
+                    message.author.mention, section_type
+                )
+            )
+
+        section = clazz(section_name)
+        self.data_manager.add_section(message.server, section)
+        self.data_manager.save_server(message.server.id)
+
+        await self.send_message(
+            message.channel,
+            "{} Section created: `{}`\n\nRun the `update` command to wipe the info channel and add it.".format(
+                message.author.mention, section_name
+            )
+        )
+
+    async def command_help(self, data, data_string, message):
         await self.send_message(message.channel, "{} \U0001F4EC".format(message.author.mention))
         for m in HELP_MESSAGES:
             await self.send_message(message.author, m)
 
-    async def command_remove(self, data, message):
-        pass
+    async def command_remove(self, data, data_string, message):
+        if not message.author.server_permissions.manage_server:
+            return log.debug("Permission denied")  # No perms
 
-    async def command_section(self, data, message):
+        if len(data) < 1:
+            return await self.send_message(
+                message.channel, "{} Usage: `remove \"<section name>\"`".format(message.author.mention)
+            )
+
+        section_name = data[0]
+
+        if not self.data_manager.get_section(message.server, section_name):
+            return await self.send_message(
+                message.channel, "{} No such section: `{}`\n\nPerhaps you meant to surround the section name with "
+                                 "\"quotes\"?".format(message.author.mention, section_name)
+            )
+
+        self.data_manager.remove_section(message.server, section_name)
+        self.data_manager.save_server(message.server.id)
+
+        await self.send_message(
+            message.channel,
+            "{} Section removed: `{}`\n\nRun the `update` command to wipe the info channel and recreate without "
+            "it.".format(
+                message.author.mention, section_name
+            )
+        )
+
+    async def command_section(self, data, data_string, message):
+        if not message.author.server_permissions.manage_server:
+            return log.debug("Permission denied")  # No perms
+
         try:
-            section_name, command, data = data.split(" || ", 2)
+            section_name, command, data = data[0], data[1], data[2:]
         except Exception:
             return await self.send_message(
                 message.channel,
-                content="{} Command usage: `section <command> || <section name> || <data>`".format(message.author)
+                content="{} Command usage: `section <command> \"<section name>\" <data>`".format(message.author)
             )
 
         section = self.data_manager.get_section(message.server, section_name)
@@ -195,13 +384,13 @@ class Client(discord.client.Client):
             ))
 
         try:
-            result = section.process_command(command, data, self, message)
+            result = section.process_command(command, data, data_string, self, message)
         except Exception:
-            await self.send_message(message.channel, content="{} There was an error running that command. It's been "
-                                                             "logged, but feel free to contact `gdude2002#5318` for "
-                                                             "more info.".format(
-                message.author.mention, section_name
-            ))
+            await self.send_message(
+                message.channel,
+                content="{} There was an error running that command. It's been logged, but feel free "
+                        "to raise an issue.".format(message.author.mention, section_name)
+            )
             log.exception(
                 "Error running section command `{}` for section `{}` on server `{}`".format(
                     command, section_name, message.server.id
@@ -210,11 +399,80 @@ class Client(discord.client.Client):
         else:
             return await self.send_message(message.channel, content="{} {}".format(message.author.mention, result))
 
-    async def command_setup(self, data, message):
-        pass
+    async def command_setup(self, data, data_string, message):
+        if not message.author.server_permissions.manage_server:
+            return log.debug("Permission denied")  # No perms
 
-    async def command_update(self, data, message):
-        pass
+        if len(data) > 1:
+            return await self.send_message(
+                message.channel,
+                content="{} Usage: `setup <channel ID>`".format(message.author.mention)
+            )
+
+        try:
+            channel = self.get_channel(str(int(data[0])))
+        except Exception:
+            return await self.send_message(
+                message.channel,
+                content="{} Command usage: `setup <channel ID>`".format(message.author.mention)
+            )
+
+        if channel not in message.server.channels:
+            return await self.send_message(
+                message.channel,
+                content="{} Unable to find channel for ID `{}`".format(message.author.mention, data[0])
+            )
+
+        self.data_manager.set_channel(message.server, channel)
+
+        await self.send_message(
+            message.channel,
+            content="{} Info channel set to {}\n\nRun the `update` command to wipe and fill it. Note that you cannot "
+                    "undo this operation - **all messages in the info channel will be removed**!".format(
+                message.author.mention, channel.mention
+            )
+        )
+
+    async def command_update(self, data, data_string, message):
+        if not message.author.server_permissions.manage_server:
+            return log.debug("Permission denied")  # No perms
+
+        channel = self.data_manager.get_channel(message.server)
+
+        if not channel:
+            return await self.send_message(
+                message.channel,
+                "{} No info channel has been set for this server. Try the `setup` command!".format(
+                    message.author.mention
+                )
+            )
+
+        channel = self.get_channel(channel)
+
+        if not channel:
+            return await self.send_message(
+                message.channel,
+                "{} The configured info channel no longer exists. Set another with the `setup` command!".format(
+                    message.author.mention
+                )
+            )
+
+        await self.clear_channel(channel)
+
+        sections = self.data_manager.get_sections(message.server)
+
+        for name, section in sections:
+            await self.send_message(channel, "**__{}__**".format(name))
+
+            for part in section.render():
+                await self.send_message(channel, part)
+
+        await self.send_message(
+            message.channel,
+            "{} The info channel has been updated!".format(
+                message.author.mention
+            )
+        )
 
 # endregion
 

@@ -14,7 +14,7 @@ class BaseSection:
     def to_dict(self) -> dict:
         pass
 
-    def process_command(self, command, data, client, message) -> str:
+    def process_command(self, command, data, data_string, client, message) -> str:
         return "Not Implemented"
 
     @staticmethod

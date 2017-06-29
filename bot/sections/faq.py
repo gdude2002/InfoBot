@@ -9,7 +9,6 @@ MESSAGE_FORMAT = """
 **Q**: *{}*
 
 **A**: {}
-
 __\_\_\_\_\_\_\_\_\_\___
 """
 
@@ -20,12 +19,12 @@ class FAQSection(BaseSection):
 
         self.questions = questions or []
 
-    def process_command(self, command, data, client, message) -> str:
+    def process_command(self, command, data, data_string, client, message) -> str:
         if command == "add":
-            if " || " not in data:
-                return "Syntax: `Question here || Answer here`"
+            if len(data) < 2:
+                return "Syntax: `add \"Question\" \"Answer\"`"
 
-            question, answer = data.split(" || ", 1)
+            question, answer = data[0], data[1]
 
             if self.has_question(question):
                 return "Question already exists: `{}`".format(question)
@@ -37,18 +36,23 @@ class FAQSection(BaseSection):
             client.sections_updated(message.server)
 
             return "Question added: `{}`".format(question)
-        elif command == "delete":
-            if not self.has_question(data):
-                return "No such question: `{}`".format(data)
-            self.delete_question(data)
+        elif command == "remove":
+            if len(data) < 1:
+                return "Syntax: `remove \"Question\"`"
+
+            question = data[0]
+
+            if not self.has_question(question):
+                return "No such question: `{}`".format(question)
+            self.delete_question(question)
             client.sections_updated(message.server)
 
-            return "Question deleted: `{}`".format(data)
+            return "Question deleted: `{}`".format(question)
         elif command == "set":
-            if " || " not in data:
-                return "Syntax: `Question here || Answer here`"
+            if len(data) < 2:
+                return "Syntax: `set \"Question\" \"Answer\"`"
 
-            question, answer = data.split(" || ", 1)
+            question, answer = data[0], data[1]
 
             has_question = self.has_question(question)
 
@@ -61,7 +65,7 @@ class FAQSection(BaseSection):
             if has_question:
                 return "Question overwritten: `{}`".format(question)
             return "Question added: `{}`".format(question)
-        return "Unknown command: {}".format(command)
+        return "Unknown command: {}\n\nAvailable commands: `add`, `remove`, `set`".format(command)
 
     def has_question(self, question):
         for q, _ in self.questions:

@@ -20,6 +20,9 @@ class DiscordLogHandler(Handler):
         if record.name == "asyncio":
             return
 
+        if self.client.is_closed:
+            return
+
         try:
             self.client.log_to_channel(record)
         except Exception as e:
