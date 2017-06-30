@@ -1,13 +1,14 @@
 # coding=utf-8
 import datetime
+import logging
+import re
+import shlex
 import traceback
 
 import asyncio
 import discord
-import logging
-import shlex
 
-from aiohttp import ServerDisconnectedError
+from aiohttp import ServerDisconnectedError, ClientSession
 from discord import Embed, Colour
 from ruamel import yaml
 
@@ -16,6 +17,9 @@ from bot.data import DataManager
 log = logging.getLogger("bot")
 
 __author__ = 'Gareth Coles'
+
+GIST_URL = "https://api.github.com/gists/{}"
+GIST_REGEX = re.compile(r"gist:[a-z0-9]+")
 
 LOG_COLOURS = {
     logging.INFO: Colour.blue(),
@@ -75,6 +79,31 @@ of using a prefix!
 • `section <command> "<section name>" <data>`: Run a section-specific command - see below for more details
 • `setup <channel ID>`: Specify an info channel to manage
 • `update`: Reset the info channel and refill it with the latest changes
+    """,
+    """
+An alternative way to use commands is via GitHub Gists. You may prefer to use this in some situations as you can
+edit the gist files without the ID changing.
+
+Note that you can only use one gist per command, and it has to be the last argument to your command - each file in
+the gist is used as an argument. Here's how it works:
+
+• Head over to https://gist.github.com
+• Add a file for each argument you want, in order
+• Click `Create Public Gist`
+• You will be taken to a URL that looks like this: `https://gist.github.com/{username}/{gist ID}`
+• Copy the gist ID and use it as the last argument in your command, in the form of `gist:{gist ID}`
+
+Note that this will use the truncated content of the files you upload - if the files are larger than 1 MiB, then only the
+first MiB will be used - but Discord has a limit of 1,000 characters per message anyway, so you shouldn't hit that.
+    """,
+    """
+For example, if you have a section named `Freeform Text` and you want to add to it, you might do the following:
+
+`!section gist:426a27a7e0593e7564b14ad1df8d1d4b` 
+
+Click here for the gist content: <https://gist.github.com/gdude2002/426a27a7e0593e7564b14ad1df8d1d4b>
+
+This will give you an end result like this: https://cdn.discordapp.com/attachments/201529692979855360/330426734484652045/unknown.png
     """,
     """
 __**Section types**__
@@ -195,8 +224,23 @@ class Client(discord.client.Client):
 
             if len(args) > 0:
                 data = args[0:]
+
+                if GIST_REGEX.match(data[-1]):
+                    gist_id = data.pop(-1).split(":")[1]
+                    gist_url = GIST_URL.format(gist_id)
+
+                    log.debug("Grabbing gist info: {}".format(gist_id))
+
+                    session = ClientSession()
+
+                    async with session.get(gist_url) as response:
+                        gist_json = await response.json()
+
+                    for filename, file in gist_json["files"].items():
+                        log.debug("Gist file collected: {}".format(filename))
+                        data.append(file["content"])
             else:
-                data = ""
+                data = []
 
             log.debug("Command: {}".format(repr(command)))
             log.debug("Args: {}".format(repr(args)))
