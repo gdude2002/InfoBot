@@ -10,6 +10,8 @@ tricky as in some cases you need to delete half of the messages there just to ad
 InfoBot is designed with channels like that in mind - although you can easily use it to manage
 more static channels too.
 
+For user documentation, please see [the wiki](https://github.com/gdude2002/InfoBot/wiki).
+
 ---
 
 * Install Python 3.6 or later
@@ -20,10 +22,3 @@ more static channels too.
     * `--debug` for debug-level logging
     * `--no-log-discord` to prevent log messages from being relayed to Discord
         * Note that `DEBUG`-level messages and messages from the `asyncio` logger are never relayed to Discord
-
----
-
-Features
-========
-
-Nothing to declare just yet. Watch this space!
