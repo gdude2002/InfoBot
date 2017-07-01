@@ -22,7 +22,7 @@ class FAQSection(BaseSection):
     def process_command(self, command, data, data_string, client, message) -> str:
         if command == "add":
             if len(data) < 2:
-                return "Syntax: `add \"Question\" \"Answer\"`"
+                return "Usage: `add \"<question>\" \"<answer>\"`"
 
             question, answer = data[0], data[1]
 
@@ -38,7 +38,7 @@ class FAQSection(BaseSection):
             return "Question added: `{}`".format(question)
         elif command == "remove":
             if len(data) < 1:
-                return "Syntax: `remove \"Question\"`"
+                return "Usage: `remove \"<question>\"`"
 
             question = data[0]
 
@@ -50,7 +50,7 @@ class FAQSection(BaseSection):
             return "Question deleted: `{}`".format(question)
         elif command == "set":
             if len(data) < 2:
-                return "Syntax: `set \"Question\" \"Answer\"`"
+                return "Usage: `set \"<question>\" \"<answer>\"`"
 
             question, answer = data[0], data[1]
 
@@ -65,7 +65,23 @@ class FAQSection(BaseSection):
             if has_question:
                 return "Question overwritten: `{}`".format(question)
             return "Question added: `{}`".format(question)
-        return "Unknown command: {}\n\nAvailable commands: `add`, `remove`, `set`".format(command)
+        elif command == "swap":
+            if len(data) < 2:
+                return "Usage: `swap \"<question>\" \"<question>\"`"
+
+            left, right = data[0], data[1]
+
+            if not self.has_question(left):
+                return "Unknown question: `{}`".format(left)
+
+            if not self.has_question(right):
+                return "Unknown question: `{}`".format(right)
+
+            self.swap_questions(left, right)
+
+            client.sections_updated(message.server)
+            return "Question positions swapped successfully"
+        return "Unknown command: {}\n\nAvailable commands: `add`, `remove`, `set`, `swap`".format(command)
 
     def has_question(self, question):
         for q, _ in self.questions:
@@ -87,6 +103,24 @@ class FAQSection(BaseSection):
             if q[0].lower() == question.lower():
                 self.questions.pop(i)
                 return
+
+    def swap_questions(self, left, right):
+        left_index = -1
+        right_index = -1
+
+        for i, q in enumerate(self.questions):
+            question = q[0].lower()
+            if question == left.lower():
+                left_index = i
+                continue
+
+            if question == right.lower():
+                right_index = i
+                continue
+
+        if left_index >= 0 and right_index >= 0:
+            self.questions[left_index], self.questions[right_index] = self.questions[right_index], \
+                                                                      self.questions[left_index]
 
     def render(self) -> List[str]:
         return [MESSAGE_FORMAT.format(question, answer) for question, answer in self.questions]

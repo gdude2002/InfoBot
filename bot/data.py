@@ -167,10 +167,11 @@ class DataManager:
         self.data[server.id]["sections"].append([section.name, section])
 
     def remove_section(self, server, section):
+        section = section.lower()
         sections = self.data[server.id]["sections"]
 
         for i, section_tuple in enumerate(sections):
-            if section_tuple[0].lower() == section.lower():
+            if section_tuple[0].lower() == section:
                 sections.pop(i)
                 return
 
@@ -181,16 +182,49 @@ class DataManager:
         return self.data[server.id]["config"]["control_chars"]
 
     def get_section(self, server, section):
+        section = section.lower()
         sections = self.data[server.id]["sections"]
 
         for name, s in sections:
-            if name.lower() == section.lower():
+            if name.lower() == section:
                 return s
 
         return None
 
+    def has_section(self, server, section):
+        section = section.lower()
+        sections = self.data[server.id]["sections"]
+
+        for name, s in sections:
+            if name.lower() == section:
+                return True
+
+        return False
+
     def get_sections(self, server):
         return self.data[server.id]["sections"]
+
+    def swap_sections(self, server, left, right):
+        left = left.lower()
+        right = right.lower()
+        sections = self.data[server.id]["sections"]
+
+        left_index = -1
+        right_index = -1
+
+        for i, section in enumerate(sections):
+            name = section[0].lower()
+
+            if name == left.lower():
+                left_index = i
+                continue
+
+            if name == right.lower():
+                right_index = i
+                continue
+
+        if left_index >= 0 and right_index >= 0:
+            sections[left_index], sections[right_index] = sections[right_index], sections[left_index]
 
     def get_channel(self, server):
         return self.data[server.id]["config"]["info_channel"]

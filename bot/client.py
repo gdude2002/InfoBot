@@ -466,6 +466,45 @@ class Client(discord.client.Client):
             )
         )
 
+    async def command_swap(self, data, data_string, message):
+        if not message.author.server_permissions.manage_server:
+            return log.debug("Permission denied")  # No perms
+
+        if len(data) < 2:
+            return await self.send_message(
+                message.channel, "{} Usage: `swap \"<section name>\" \"<section name>\"`".format(message.author.mention)
+            )
+
+        left, right = data[0], data[1]
+
+        if not self.data_manager.has_section(message.server, left):
+            return await self.send_message(
+                message.channel, "{} No such section: `{}`\n\nPerhaps you meant to surround the section name with "
+                                 "\"quotes\"?".format(message.author.mention, left)
+            )
+
+        if not self.data_manager.has_section(message.server, right):
+            return await self.send_message(
+                message.channel, "{} No such section: `{}`\n\nPerhaps you meant to surround the section name with "
+                                 "\"quotes\"?".format(message.author.mention, right)
+            )
+
+        self.data_manager.swap_sections(message.server, left, right)
+        self.data_manager.save_server(message.server.id)
+
+        await self.send_message(
+            message.channel,
+            "{} Sections swapped: `{}` and `{}`\n\nRun the `update` command to wipe the info channel and recreate"
+            " with the new layout.".format(
+                message.author.mention, left, right
+            )
+        )
+
+    # Aliases
+
+    command_add = command_create
+    command_delete = command_remove
+
 # endregion
 
     pass
