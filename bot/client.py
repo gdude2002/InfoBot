@@ -53,7 +53,6 @@ To read up on how to use me, you should really take a look at our documentation 
 """
 
 
-
 class Client(discord.client.Client):
     def __init__(self, *, loop=None, **options):
         super().__init__(loop=loop, **options)
