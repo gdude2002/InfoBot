@@ -77,7 +77,7 @@ class BulletedListSection(BaseSection):
         return "Unknown command: `{}`\n\nAvailable commands: `add`, `remove`, `swap`, `template`".format(command)
 
     def render(self) -> List[str]:
-        return line_splitter([self.template.format(line) for line in self.items], 1000)
+        return line_splitter([self.template.format(line) for line in self.items], 2000)
 
     def to_dict(self) -> dict:
         return {

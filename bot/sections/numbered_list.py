@@ -78,7 +78,7 @@ class NumberedListSection(BaseSection):
         return "Unknown command: `{}`\n\nAvailable commands: `add`, `remove`, `swap`, `template`".format(command)
 
     def render(self) -> List[str]:
-        return line_splitter([self.template.format(i + 1, line) for i, line in enumerate(self.items)], 1000)
+        return line_splitter([self.template.format(i + 1, line) for i, line in enumerate(self.items)], 2000)
 
     def to_dict(self) -> dict:
         return {

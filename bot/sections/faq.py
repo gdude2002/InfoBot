@@ -29,8 +29,8 @@ class FAQSection(BaseSection):
             if self.has_question(question):
                 return "Question already exists: `{}`".format(question)
 
-            if len(MESSAGE_FORMAT.format(question, answer)) > 1000:
-                return "Question and answer must be shorter than {} characters.".format(999 - len(MESSAGE_FORMAT))
+            if len(MESSAGE_FORMAT.format(question, answer)) > 2000:
+                return "Question and answer must be shorter than {} characters.".format(1999 - len(MESSAGE_FORMAT))
 
             self.set_question(question, answer)
             client.sections_updated(message.server)
@@ -56,8 +56,8 @@ class FAQSection(BaseSection):
 
             has_question = self.has_question(question)
 
-            if len(MESSAGE_FORMAT.format(question, answer)) > 1000:
-                return "Question and answer must be shorter than {} characters.".format(999 - len(MESSAGE_FORMAT))
+            if len(MESSAGE_FORMAT.format(question, answer)) > 2000:
+                return "Question and answer must be shorter than {} characters.".format(1999 - len(MESSAGE_FORMAT))
 
             self.set_question(question, answer)
             client.sections_updated(message.server)

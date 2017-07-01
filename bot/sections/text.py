@@ -17,11 +17,11 @@ class TextSection(BaseSection):
             if len(data) < 1:
                 return "Usage: `add \"<text>\"`"
 
-            if data[0] and len(data[0]) < 1000:
+            if data[0] and len(data[0]) < 2000:
                 self.text.append(data[0])
                 client.sections_updated(message.server)
                 return "Markdown block added"
-            return "Block data must be shorter than 1000 characters"
+            return "Block data must be shorter than 2000 characters"
         elif command == "remove":
             if not data:
                 return "Usage: `delete <index>`\n\nNote that indexes start at `1`"
@@ -45,7 +45,6 @@ class TextSection(BaseSection):
                 left, right = int(data[0]) - 1, int(data[1]) - 1
             except Exception:
                 return "Usage: `swap <index> <index>`\n\nNote that indexes start at `1`"
-
 
             if left >= len(self.text) or left < 0:
                 return "Unknown index: `{}`\n\nNote that indexes start at `1`".format(data[0])
