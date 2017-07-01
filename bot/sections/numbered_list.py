@@ -39,8 +39,43 @@ class NumberedListSection(BaseSection):
             self.items.pop(index)
             client.sections_updated(message.server)
             return "Item at index `{}` removed".format(data[0])
+        elif command == "swap":
+            if len(data) < 2:
+                return "Usage: `swap <index> <index>`\n\nNote that indexes start at `1`"
 
-        return "Unknown command: `{}`\n\nAvailable commands: `add`, `remove`, `swap`".format(command)
+            try:
+                left, right = int(data[0]) - 1, int(data[1]) - 1
+            except Exception:
+                return "Usage: `swap <index> <index>`\n\nNote that indexes start at `1`"
+
+            if left >= len(self.items) or left < 0:
+                return "Unknown index: `{}`\n\nNote that indexes start at `1`".format(data[0])
+
+            if right >= len(self.items) or right < 0:
+                return "Unknown index: `{}`\n\nNote that indexes start at `1`".format(data[1])
+
+            self.items[left], self.items[right] = self.items[right], self.items[left]
+
+            client.sections_updated(message.server)
+            return "Items at indexes `{}` and `{}` swapped".format(data[0], data[1])
+        elif command == "template":
+            if not data:
+                return "Here is the current template.\n\n```{}```".format(self.template)
+
+            template = data[0]
+
+            try:
+                template.format("1", "Item Goes Here")
+            except Exception:
+                return "Invalid template. Ensure it contains `{0}` to be replaced with the list item's index, and " \
+                       "`{1}` to be replaced with the list item."
+
+            self.template = template
+
+            client.sections_updated(message.server)
+            return "Item template has been updated."
+
+        return "Unknown command: `{}`\n\nAvailable commands: `add`, `remove`, `swap`, `template`".format(command)
 
     def render(self) -> List[str]:
         return line_splitter([self.template.format(i + 1, line) for i, line in enumerate(self.items)], 1000)
