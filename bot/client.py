@@ -44,78 +44,14 @@ Note: Management commands require the **Manage Server** permission. Issues can b
     """
 ]
 
-HELP_MESSAGES = [
-    """
+HELP_MESSAGE = """
 InfoBot is written and maintained by `gdude2002#5318`. If you've got a problem, please report it to the issue \
 tracker at <https://github.com/gdude2002/InfoBot>.
 
-__**About**__
-InfoBot is designed for servers that have a semi-static information channel that provides essential information \
-for users - for example, channels containing sets of rules, FAQs, useful links, channel lists, and general information.
+To read up on how to use me, you should really take a look at our documentation on the wiki. You can find that here: \
+<https://github.com/gdude2002/InfoBot/wiki>
+"""
 
-The main problem with large channels of this type is adding information in the middle of the stack of messages - to do \
-this manually, you have to delete all of the messages after that point, and repost them after you've added your \
-new information.
-
-InfoBot uses a section-based model to generate the content of the info channel for you. There are multiple types of \
-section, and each may be configured individually for your needs.
-
-Note that section names are used as both identifiers and section headers!
-    """,
-    """
-__**Commands**__
-All commands (except for `help`) require the "Manage Server" permission.
-
-Note that command arguments support spaces - just `"surround them with double quotes"` and they'll be counted \
-as a single argument. Quotes are given below for arguments you might expect to need them.
-
-Commands must be prefixed - the default prefix is `!`, but server settings may vary. You can always mention me instead \
-of using a prefix!
-
-• `config [<option> <value>]`: Set the value for a config option. Omit `option` and `value` to see the current config.
-• `create <section type> "<section name>"`: Create a new section - see below for supported types.
-• `help`: This help message!
-• `remove "<section name>"`: Remove a section 
-• `section <command> "<section name>" <data>`: Run a section-specific command - see below for more details
-• `setup <channel ID>`: Specify an info channel to manage
-• `update`: Reset the info channel and refill it with the latest changes
-    """,
-    """
-An alternative way to use commands is via GitHub Gists. You may prefer to use this in some situations as you can
-edit the gist files without the ID changing.
-
-Note that you can only use one gist per command, and it has to be the last argument to your command - each file in
-the gist is used as an argument. Here's how it works:
-
-• Head over to https://gist.github.com
-• Add a file for each argument you want, in order
-• Click `Create Public Gist`
-• You will be taken to a URL that looks like this: `https://gist.github.com/{username}/{gist ID}`
-• Copy the gist ID and use it as the last argument in your command, in the form of `gist:{gist ID}`
-
-Note that this will use the truncated content of the files you upload - if the files are larger than 1 MiB, then only the
-first MiB will be used - but Discord has a limit of 1,000 characters per message anyway, so you shouldn't hit that.
-    """,
-    """
-For example, if you have a section named `Freeform Text` and you want to add to it, you might do the following:
-
-`!section gist:426a27a7e0593e7564b14ad1df8d1d4b` 
-
-Click here for the gist content: <https://gist.github.com/gdude2002/426a27a7e0593e7564b14ad1df8d1d4b>
-
-This will give you an end result like this: https://cdn.discordapp.com/attachments/201529692979855360/330426734484652045/unknown.png
-    """,
-    """
-__**Section types**__
-The following section types are currently available.
-
-• `faq` - A section holding sets of frequently-asked questions and answers. Section commands: `add`, `delete`, `set`.
-• `text` - A free-form text section that can hold whatever you like. Section commands: `set`.
-
-More section types are always being developed, and you may feel free to suggest new types and contribute your own \
-here: <https://github.com/gdude2002/InfoBot>.
-    """
-]
 
 
 class Client(discord.client.Client):
@@ -235,6 +171,13 @@ class Client(discord.client.Client):
 
                     async with session.get(gist_url) as response:
                         gist_json = await response.json()
+
+                    session.close()
+
+                    if "files" not in gist_json:
+                        return await self.send_message(
+                            message.channel, "{} No such gist: `{}`".format(message.author.mention, gist_id)
+                        )
 
                     for filename, file in gist_json["files"].items():
                         log.debug("Gist file collected: {}".format(filename))
@@ -376,9 +319,7 @@ class Client(discord.client.Client):
         )
 
     async def command_help(self, data, data_string, message):
-        await self.send_message(message.channel, "{} \U0001F4EC".format(message.author.mention))
-        for m in HELP_MESSAGES:
-            await self.send_message(message.author, m)
+        await self.send_message(message.channel, "{}\n\n{}".format(message.author.mention, HELP_MESSAGE))
 
     async def command_remove(self, data, data_string, message):
         if not message.author.server_permissions.manage_server:
@@ -413,11 +354,18 @@ class Client(discord.client.Client):
             return log.debug("Permission denied")  # No perms
 
         try:
-            section_name, command, data = data[0], data[1], data[2:]
+            section_name, command = data[0], data[1]
+
+            if len(data) > 2:
+                data = data[2:]
+            else:
+                data = []
         except Exception:
             return await self.send_message(
                 message.channel,
-                content="{} Command usage: `section <command> \"<section name>\" <data>`".format(message.author)
+                content="{} Command usage: `section \"<section name>\" <command> [data ...]`".format(
+                    message.author.mention
+                )
             )
 
         section = self.data_manager.get_section(message.server, section_name)

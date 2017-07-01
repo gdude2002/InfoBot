@@ -5,8 +5,6 @@ from bot.sections.base import BaseSection
 
 __author__ = "Gareth Coles"
 
-SUPPORTED_COMMANDS = ["set"]
-
 
 class TextSection(BaseSection):
     def __init__(self, name, text=None):
@@ -26,18 +24,19 @@ class TextSection(BaseSection):
             return "Section data must be shorter than 1000 characters"
         elif command == "remove":
             if not data:
-                return "Usage: `delete <message index>`\n\nNote that indexes start at `0`"
+                return "Usage: `delete <message index>`\n\nNote that indexes start at `1`"
 
             try:
-                index = int(data[0])
-            except:
-                return "Usage: `delete <message index>`\n\nNote that indexes start at `0`"
+                index = int(data[0]) - 1
+            except Exception:
+                return "Usage: `delete <message index>`\n\nNote that indexes start at `1`"
 
             if index >= len(self.text):
-                return "Unknown index: `{}`\n\nNote that indexes start at `0`".format(index)
+                return "Unknown index: `{}`\n\nNote that indexes start at `1`".format(data[0])
 
             self.text.pop(index)
-            return "Data at index `{}` removed".format(index)
+            client.sections_updated(message.server)
+            return "Data at index `{}` removed".format(data[0])
 
         return "Unknown command: `{}`\n\nAvailable commands: `add`, `remove`, `swap`".format(command)
 
