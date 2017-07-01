@@ -419,9 +419,8 @@ class Client(discord.client.Client):
         await self.send_message(
             message.channel,
             content="{} Info channel set to {}\n\nRun the `update` command to wipe and fill it. Note that you cannot "
-                    "undo this operation - **all messages in the info channel will be removed**!".format(
-                message.author.mention, channel.mention
-            )
+                    "undo this operation - **all messages in the info channel will be removed**!\n\n**__*MAKE SURE "
+                    "YOU SELECTED THE CORRECT CHANNEL!*__**".format(message.author.mention, channel.mention)
         )
 
     async def command_update(self, data, data_string, message):
