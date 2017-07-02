@@ -455,7 +455,7 @@ class Client(discord.client.Client):
             await self.send_message(channel, "**__{}__**".format(name))
 
             for part in section.render():
-                await self.send_message(channel, "\n{}".format(part))
+                await self.send_message(channel, part)
 
         await self.send_message(
             message.channel,
