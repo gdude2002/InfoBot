@@ -475,7 +475,7 @@ class Client(discord.client.Client):
         del final_markdown, final_commands
 
         session = ClientSession()
-        result = await session.post(GIST_CREATE_URL, data={
+        result = await session.post(GIST_CREATE_URL, json={
             "files": {
                 "data.md": {
                     "content": content
@@ -484,8 +484,6 @@ class Client(discord.client.Client):
         })
 
         data = await result.json()
-
-        await self.send_message(message.channel, str(data))
 
         if "error" in data:
             await self.send_message(
