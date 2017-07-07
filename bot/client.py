@@ -453,15 +453,19 @@ class Client(discord.client.Client):
 
         for name, section in sections:
             await self.send_message(channel, "**__{}__**".format(name))
+            await asyncio.sleep(0.2)
 
             if section.get_header():
                 await self.send_message(channel, section.get_header())
+                await asyncio.sleep(0.2)
 
             for part in section.render():
                 await self.send_message(channel, part)
+                await asyncio.sleep(0.2)
 
             if section.get_footer():
                 await self.send_message(channel, section.get_footer())
+                await asyncio.sleep(0.2)
 
         await self.send_message(
             message.channel,
