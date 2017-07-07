@@ -131,7 +131,7 @@ class FAQSection(BaseSection):
         commands = []
 
         for question, answer in self.questions:
-            commands.append("{}" + "add \"{}\" \"{}\"".format(question, answer))
+            commands.append("{}section" + "\"{}\" add \"{}\" \"{}\"".format(self.name, question, answer))
 
         return commands
 

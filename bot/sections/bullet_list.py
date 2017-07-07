@@ -82,10 +82,10 @@ class BulletedListSection(BaseSection):
         return line_splitter([self.template.format(line) for line in self.items], 2000)
 
     def show(self) -> List[str]:
-        commands = ["{}template \"\"" + self.template]
+        commands = ["{}section " + "\"{}\" template \"{}\"".format(self.name, self.template)]
 
         for line in self.items:
-            commands.append("{}" + "add \"{}\"".format(line))
+            commands.append("{}section" + "\"{}\" add \"{}\"".format(self.name, line))
 
         return commands
 

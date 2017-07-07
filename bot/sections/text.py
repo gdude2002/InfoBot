@@ -68,7 +68,7 @@ class TextSection(BaseSection):
         commands = []
 
         for line in self.text:
-            commands.append("{}" + "add \"{}\"".format(line))
+            commands.append("{}section" + "\"{}\" add \"{}\"".format(self.name, line))
 
         return commands
 

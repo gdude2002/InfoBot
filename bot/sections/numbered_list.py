@@ -83,10 +83,10 @@ class NumberedListSection(BaseSection):
         return line_splitter([self.template.format(i + 1, line) for i, line in enumerate(self.items)], 2000)
 
     def show(self) -> List[str]:
-        commands = ["{}template \"\"" + self.template]
+        commands = ["{}section " + "\"{}\" template \"{}\"".format(self.name, self.template)]
 
         for line in self.items:
-            commands.append("{}" + "add \"{}\"".format(line))
+            commands.append("{}section" + "\"{}\" add \"{}\"".format(self.name, line))
 
         return commands
 
