@@ -468,7 +468,7 @@ class Client(discord.client.Client):
 
         content = content.format(
             "\n\n---\n\n".join(final_markdown),
-            "\n\n---\n\n".join(final_markdown),
+            "\n\n---\n\n".join(final_commands),
         )
 
         del markdown, commands
@@ -477,7 +477,7 @@ class Client(discord.client.Client):
         session = ClientSession()
         result = await session.post(GIST_CREATE_URL, json={
             "files": {
-                "data.md": {
+                "data.txt": {
                     "content": content
                 }
             }
