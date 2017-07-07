@@ -454,19 +454,20 @@ Command Breakdown
 
         for name, section in sections:
             markdown_set = ["**__{}__**".format(name)]
-            command_set = ["{}add " + "{} \"{}\"".format(section._type, name)]
+            command_set = ["add {} \"{}\"".format(section._type, name)]
 
             if section.get_header():
-                command_set.append("{}header " + "\"{}\" \"{}\"".format(name, section.get_header()))
+                command_set.append("header \"{}\" \"{}\"".format(name, section.get_header()))
                 markdown_set.append(section.get_header())
 
-            command_set += section.show()
+            for x in section.show():
+                command_set.append(x)
 
             for part in section.render():
                 markdown_set.append(part)
 
             if section.get_footer():
-                command_set.append("{}footer " + "\"{}\" \"{}\"".format(name, section.get_footer()))
+                command_set.append("footer \"{}\" \"{}\"".format(name, section.get_footer()))
                 markdown_set.append(section.get_footer())
 
             commands.append(command_set)
@@ -479,7 +480,9 @@ Command Breakdown
             final_markdown.append("\n\n".join(m_set))
 
         for c_set in commands:
-            final_commands.append("\n\n".join([c.format(chars) for c in c_set]))
+            final_commands.append("\n\n".join([
+                chars + c for c in c_set
+            ]))
 
         content = content.format(
             "\n\n---\n\n".join(final_markdown),
@@ -490,7 +493,7 @@ Command Breakdown
         del final_markdown, final_commands
 
         await self.send_file(
-            message.channel, io.StringIO(content), filename="data.txt",
+            message.channel, io.BytesIO(content.encode("UTF-8")), filename="data.txt",
             content="{} Here's the data you requested.".format(message.author.mention)
         )
 
