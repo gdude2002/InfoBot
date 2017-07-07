@@ -225,10 +225,17 @@ class Client(discord.client.Client):
 
             last_index = current_index
 
+    def has_permission(self, user):
+        if user.author.server_permissions.manage_server:
+            return True
+        elif user.id == self.config["owner_id"]:
+            return True
+        return False
+
     # region Commands
 
     async def command_config(self, data, data_string, message):
-        if not message.author.server_permissions.manage_server:
+        if not self.has_permission(message.author):
             return log.debug("Permission denied")  # No perms
 
         if len(data) < 1:
@@ -283,7 +290,7 @@ class Client(discord.client.Client):
             )
 
     async def command_create(self, data, data_string, message):
-        if not message.author.server_permissions.manage_server:
+        if not self.has_permission(message.author):
             return log.debug("Permission denied")  # No perms
 
         if len(data) < 2:
@@ -324,7 +331,7 @@ class Client(discord.client.Client):
         await self.send_message(message.channel, "{}\n\n{}".format(message.author.mention, HELP_MESSAGE))
 
     async def command_remove(self, data, data_string, message):
-        if not message.author.server_permissions.manage_server:
+        if not self.has_permission(message.author):
             return log.debug("Permission denied")  # No perms
 
         if len(data) < 1:
@@ -352,7 +359,7 @@ class Client(discord.client.Client):
         )
 
     async def command_section(self, data, data_string, message):
-        if not message.author.server_permissions.manage_server:
+        if not self.has_permission(message.author):
             return log.debug("Permission denied")  # No perms
 
         try:
@@ -394,7 +401,7 @@ class Client(discord.client.Client):
             return await self.send_message(message.channel, content="{} {}".format(message.author.mention, result))
 
     async def command_setup(self, data, data_string, message):
-        if not message.author.server_permissions.manage_server:
+        if not self.has_permission(message.author):
             return log.debug("Permission denied")  # No perms
 
         if len(data) > 1:
@@ -427,7 +434,7 @@ class Client(discord.client.Client):
         )
 
     async def command_show(self, data, data_string, message):
-        if not message.author.server_permissions.manage_server:
+        if not self.has_permission(message.author):
             return log.debug("Permission denied")  # No perms
 
         await self.send_message(
@@ -498,7 +505,7 @@ Command Breakdown
         )
 
     async def command_update(self, data, data_string, message):
-        if not message.author.server_permissions.manage_server:
+        if not self.has_permission(message.author):
             return log.debug("Permission denied")  # No perms
 
         channel = self.data_manager.get_channel(message.server)
@@ -549,7 +556,7 @@ Command Breakdown
         )
 
     async def command_swap(self, data, data_string, message):
-        if not message.author.server_permissions.manage_server:
+        if not self.has_permission(message.author):
             return log.debug("Permission denied")  # No perms
 
         if len(data) < 2:
@@ -583,7 +590,7 @@ Command Breakdown
         )
 
     async def command_header(self, data, data_string, message):
-        if not message.author.server_permissions.manage_server:
+        if not self.has_permission(message.author):
             return log.debug("Permission denied")  # No perms
 
         if len(data) < 2:
@@ -615,7 +622,7 @@ Command Breakdown
         )
 
     async def command_footer(self, data, data_string, message):
-        if not message.author.server_permissions.manage_server:
+        if not self.has_permission(message.author):
             return log.debug("Permission denied")  # No perms
 
         if len(data) < 2:
