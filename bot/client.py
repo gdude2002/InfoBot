@@ -7,6 +7,7 @@ import traceback
 
 import asyncio
 import discord
+import json
 
 from aiohttp import ServerDisconnectedError, ClientSession
 from discord import Embed, Colour
@@ -488,13 +489,13 @@ Command Breakdown
         del final_markdown, final_commands
 
         session = ClientSession()
-        result = await session.post(GIST_CREATE_URL, json={
+        result = await session.post(GIST_CREATE_URL, data=json.dumps({
             "files": {
                 "data.txt": {
                     "content": content
                 }
             }
-        })
+        }))
 
         data = await result.json()
 

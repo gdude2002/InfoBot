@@ -85,7 +85,7 @@ class BulletedListSection(BaseSection):
         commands = ["{}section " + "\"{}\" template \"{}\"".format(self.name, self.template)]
 
         for line in self.items:
-            commands.append("{}section" + "\"{}\" add \"{}\"".format(self.name, line))
+            commands.append("{}section " + "\"{}\" add \"{}\"".format(self.name, line))
 
         return commands
 
