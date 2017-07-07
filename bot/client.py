@@ -455,13 +455,13 @@ class Client(discord.client.Client):
             await self.send_message(channel, "**__{}__**".format(name))
 
             if section.get_header():
-                self.send_message(channel, section.get_header())
+                await self.send_message(channel, section.get_header())
 
             for part in section.render():
                 await self.send_message(channel, part)
 
             if section.get_footer():
-                self.send_message(channel, section.get_footer())
+                await self.send_message(channel, section.get_footer())
 
         await self.send_message(
             message.channel,
