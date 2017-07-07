@@ -228,8 +228,9 @@ class Client(discord.client.Client):
     def has_permission(self, user):
         if user.author.server_permissions.manage_server:
             return True
-        elif user.id == self.config["owner_id"]:
+        elif int(user.id) == int(self.config["owner_id"]):
             return True
+
         return False
 
     # region Commands
