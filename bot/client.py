@@ -485,6 +485,8 @@ class Client(discord.client.Client):
 
         data = await result.json()
 
+        await self.send_message(message.channel, str(data))
+
         if "error" in data:
             await self.send_message(
                 message.channel, "{} An error occurred: {}".format(message.author.mention, data["error"])
