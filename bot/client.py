@@ -491,7 +491,7 @@ class Client(discord.client.Client):
             )
         else:
             await self.send_message(
-                message.channel, "{} Gist created: {}".format(message.author.mention, data["url"])
+                message.channel, "{} Gist created: {}".format(message.author.mention, data["html_url"])
             )
 
     async def command_update(self, data, data_string, message):
