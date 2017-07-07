@@ -226,7 +226,7 @@ class Client(discord.client.Client):
             last_index = current_index
 
     def has_permission(self, user):
-        if user.author.server_permissions.manage_server:
+        if user.server_permissions.manage_server:
             return True
         elif int(user.id) == int(self.config["owner_id"]):
             return True
