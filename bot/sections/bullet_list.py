@@ -8,6 +8,8 @@ __author__ = "Gareth Coles"
 
 
 class BulletedListSection(BaseSection):
+    _type = "bulleted_list"
+
     def __init__(self, name, items=None, template="\u2022 {0}", header="", footer=""):
         super().__init__(name, header=header, footer=footer)
 
@@ -78,6 +80,14 @@ class BulletedListSection(BaseSection):
 
     def render(self) -> List[str]:
         return line_splitter([self.template.format(line) for line in self.items], 2000)
+
+    def show(self) -> List[str]:
+        commands = ["{}template \"\"" + self.template]
+
+        for line in self.items:
+            commands.append("{}" + "add \"{}\"".format(line))
+
+        return commands
 
     def to_dict(self) -> dict:
         return {

@@ -18,6 +18,7 @@ log = logging.getLogger("bot")
 
 __author__ = 'Gareth Coles'
 
+GIST_CREATE_URL = "https://api.github.com/gists"
 GIST_URL = "https://api.github.com/gists/{}"
 GIST_REGEX = re.compile(r"gist:[a-z0-9]+")
 
@@ -421,6 +422,69 @@ class Client(discord.client.Client):
             content="{} Info channel set to {}\n\nRun the `update` command to wipe and fill it. Note that you cannot "
                     "undo this operation - **all messages in the info channel will be removed**!\n\n**__*MAKE SURE "
                     "YOU SELECTED THE CORRECT CHANNEL!*__**".format(message.author.mention, channel.mention)
+        )
+
+    async def command_gist(self, data, data_string, message):
+        if not message.author.server_permissions.manage_server:
+            return log.debug("Permission denied")  # No perms
+
+        await self.send_message(
+            message.channel, "{} Just a moment, collecting and uploading data...".format(message.author.mention)
+        )
+
+        content = "# Rendered Markdown\n\n{}\n\n#Command Breakdown\n\n{}"
+        markdown = []
+        commands = []
+
+        sections = self.data_manager.get_sections(message.server)
+        chars = self.data_manager.get_server_command_chars(message.server)
+
+        for name, section in sections:
+            markdown_set = ["**__{}__**".format(name)]
+            command_set = ["{}add " + "{} \"{}\"".format(section._type, name)]
+
+            if section.get_header():
+                command_set.append("{}header " + "\"{}\" \"{}\"".format(name, section.get_header()))
+                markdown_set.append(section.get_header())
+
+            for part in section.render():
+                markdown_set.append(part)
+
+            if section.get_footer():
+                command_set.append("{}footer " + "\"{}\" \"{}\"".format(name, section.get_footer()))
+                markdown_set.append(section.get_footer())
+
+            commands.append(command_set)
+            markdown.append(markdown_set)
+
+            final_markdown = []
+            final_commands = []
+
+        for m_set in markdown:
+            final_markdown.append("\n\n".join(m_set))
+
+        for c_set in commands:
+            final_commands.append("\n\n".join([c.format(chars) for c in c_set]))
+
+        content = content.format(
+            "\n\n---\n\n".join(final_markdown),
+            "\n\n---\n\n".join(final_markdown),
+        )
+
+        del markdown, commands
+        del final_markdown, final_commands
+
+        session = ClientSession()
+        result = await session.post(GIST_CREATE_URL, data={
+            "files": {
+                "data.md": content
+            }
+        })
+
+        data = await result.json()
+
+        await self.send_message(
+            message.channel, "{} Gist created: {}".format(message.author.mention, data["url"])
         )
 
     async def command_update(self, data, data_string, message):

@@ -8,6 +8,8 @@ __author__ = "Gareth Coles"
 
 
 class NumberedListSection(BaseSection):
+    _type = "numbered_list"
+
     def __init__(self, name, items=None, template="**`{0})`** {1}", header="", footer=""):
         super().__init__(name, header=header, footer=footer)
 
@@ -79,6 +81,14 @@ class NumberedListSection(BaseSection):
 
     def render(self) -> List[str]:
         return line_splitter([self.template.format(i + 1, line) for i, line in enumerate(self.items)], 2000)
+
+    def show(self) -> List[str]:
+        commands = ["{}template \"\"" + self.template]
+
+        for line in self.items:
+            commands.append("{}" + "add \"{}\"".format(line))
+
+        return commands
 
     def to_dict(self) -> dict:
         return {

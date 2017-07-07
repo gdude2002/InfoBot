@@ -7,6 +7,8 @@ __author__ = "Gareth Coles"
 
 
 class TextSection(BaseSection):
+    _type = "text"
+
     def __init__(self, name, text=None, header="", footer=""):
         super().__init__(name, header=header, footer=footer)
 
@@ -61,6 +63,14 @@ class TextSection(BaseSection):
 
     def render(self) -> List[str]:
         return self.text
+
+    def show(self) -> List[str]:
+        commands = []
+
+        for line in self.text:
+            commands.append("{}" + "add \"{}\"".format(line))
+
+        return commands
 
     def to_dict(self) -> dict:
         return {

@@ -5,12 +5,17 @@ __author__ = "Gareth Coles"
 
 
 class BaseSection:
+    _type = None
+
     def __init__(self, name, header="", footer=""):
         self.name = name
         self.header = header
         self.footer = footer
 
     def render(self) -> List[str]:
+        pass
+
+    def show(self) -> List[str]:
         pass
 
     def to_dict(self) -> dict:

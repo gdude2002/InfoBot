@@ -14,6 +14,8 @@ __\_\_\_\_\_\_\_\_\_\___
 
 
 class FAQSection(BaseSection):
+    _type = "faq"
+
     def __init__(self, name, questions=None, header="", footer=""):
         super().__init__(name, header=header, footer=footer)
 
@@ -124,6 +126,14 @@ class FAQSection(BaseSection):
 
     def render(self) -> List[str]:
         return [MESSAGE_FORMAT.format(question, answer) for question, answer in self.questions]
+
+    def show(self) -> List[str]:
+        commands = []
+
+        for question, answer in self.questions:
+            commands.append("{}" + "add \"{}\" \"{}\"".format(question, answer))
+
+        return commands
 
     def to_dict(self) -> dict:
         return {
