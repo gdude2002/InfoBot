@@ -1,5 +1,6 @@
 # coding=utf-8
 import datetime
+import io
 import logging
 import re
 import shlex
@@ -425,7 +426,7 @@ class Client(discord.client.Client):
                     "YOU SELECTED THE CORRECT CHANNEL!*__**".format(message.author.mention, channel.mention)
         )
 
-    async def command_gist(self, data, data_string, message):
+    async def command_show(self, data, data_string, message):
         if not message.author.server_permissions.manage_server:
             return log.debug("Permission denied")  # No perms
 
@@ -488,25 +489,10 @@ Command Breakdown
         del markdown, commands
         del final_markdown, final_commands
 
-        session = ClientSession()
-        result = await session.post(GIST_CREATE_URL, data=json.dumps({
-            "files": {
-                "data.txt": {
-                    "content": content
-                }
-            }
-        }))
-
-        data = await result.json()
-
-        if "error" in data:
-            await self.send_message(
-                message.channel, "{} An error occurred: {}".format(message.author.mention, data["error"])
-            )
-        else:
-            await self.send_message(
-                message.channel, "{} Gist created: {}".format(message.author.mention, data["html_url"])
-            )
+        await self.send_file(
+            message.channel, io.StringIO(content), filename="data.txt",
+            content="{} Here's the data you requested.".format(message.author.mention)
+        )
 
     async def command_update(self, data, data_string, message):
         if not message.author.server_permissions.manage_server:
