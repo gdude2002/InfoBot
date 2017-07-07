@@ -432,7 +432,18 @@ class Client(discord.client.Client):
             message.channel, "{} Just a moment, collecting and uploading data...".format(message.author.mention)
         )
 
-        content = "# Rendered Markdown\n\n{}\n\n#Command Breakdown\n\n{}"
+        content = """
+Rendered Markdown
+=================
+
+{}
+
+Command Breakdown
+=================
+
+{}
+        """
+
         markdown = []
         commands = []
 
@@ -446,6 +457,8 @@ class Client(discord.client.Client):
             if section.get_header():
                 command_set.append("{}header " + "\"{}\" \"{}\"".format(name, section.get_header()))
                 markdown_set.append(section.get_header())
+
+            command_set += section.show()
 
             for part in section.render():
                 markdown_set.append(part)
