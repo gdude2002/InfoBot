@@ -454,8 +454,14 @@ class Client(discord.client.Client):
         for name, section in sections:
             await self.send_message(channel, "**__{}__**".format(name))
 
+            if section.get_header():
+                self.send_message(channel, section.get_header())
+
             for part in section.render():
                 await self.send_message(channel, part)
+
+            if section.get_footer():
+                self.send_message(channel, section.get_footer())
 
         await self.send_message(
             message.channel,
@@ -495,6 +501,70 @@ class Client(discord.client.Client):
             "{} Sections swapped: `{}` and `{}`\n\nRun the `update` command to wipe the info channel and recreate"
             " with the new layout.".format(
                 message.author.mention, left, right
+            )
+        )
+
+    async def command_header(self, data, data_string, message):
+        if not message.author.server_permissions.manage_server:
+            return log.debug("Permission denied")  # No perms
+
+        if len(data) < 2:
+            return await self.send_message(
+                message.channel, "{} Usage: `header \"<section name>\" \"<data>\"`".format(message.author.mention)
+            )
+
+        section_name, header = data[0], data[1]
+
+        if not self.data_manager.get_section(message.server, section_name):
+            return await self.send_message(
+                message.channel, "{} No such section: `{}`\n\nPerhaps you meant to surround the section name with "
+                                 "\"quotes\"?".format(message.author.mention, section_name)
+            )
+
+        if len(header) > 2000:
+            return await self.send_message(
+                message.channel, "{} Section header must be less than 2000 characters in length"
+            )
+
+        self.data_manager.get_section(message.server, section_name).set_header(header)
+
+        await self.send_message(
+            message.channel,
+            "{} Section header updated: `{}`\n\nRun the `update` command to wipe the info channel and recreate with "
+            "it.".format(
+                message.author.mention, section_name
+            )
+        )
+
+    async def command_footer(self, data, data_string, message):
+        if not message.author.server_permissions.manage_server:
+            return log.debug("Permission denied")  # No perms
+
+        if len(data) < 2:
+            return await self.send_message(
+                message.channel, "{} Usage: `footer \"<section name>\" \"<data>\"`".format(message.author.mention)
+            )
+
+        section_name, footer = data[0], data[1]
+
+        if not self.data_manager.get_section(message.server, section_name):
+            return await self.send_message(
+                message.channel, "{} No such section: `{}`\n\nPerhaps you meant to surround the section name with "
+                                 "\"quotes\"?".format(message.author.mention, section_name)
+            )
+
+        if len(footer) > 2000:
+            return await self.send_message(
+                message.channel, "{} Section footer must be less than 2000 characters in length"
+            )
+
+        self.data_manager.get_section(message.server, section_name).set_footer(footer)
+
+        await self.send_message(
+            message.channel,
+            "{} Section footer updated: `{}`\n\nRun the `update` command to wipe the info channel and recreate with "
+            "it.".format(
+                message.author.mention, section_name
             )
         )
 

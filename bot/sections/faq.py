@@ -14,8 +14,8 @@ __\_\_\_\_\_\_\_\_\_\___
 
 
 class FAQSection(BaseSection):
-    def __init__(self, name, questions=None):
-        super().__init__(name)
+    def __init__(self, name, questions=None, header="", footer=""):
+        super().__init__(name, header=header, footer=footer)
 
         self.questions = questions or []
 
@@ -127,9 +127,11 @@ class FAQSection(BaseSection):
 
     def to_dict(self) -> dict:
         return {
-            "questions": self.questions
+            "questions": self.questions,
+            "header": self.header,
+            "footer": self.footer
         }
-    
+
     @staticmethod
     def from_dict(name, data) -> "FAQSection":
         return FAQSection(name, **data)

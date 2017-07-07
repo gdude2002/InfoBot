@@ -8,8 +8,8 @@ __author__ = "Gareth Coles"
 
 
 class BulletedListSection(BaseSection):
-    def __init__(self, name, items=None, template="\u2022 {0}"):
-        super().__init__(name)
+    def __init__(self, name, items=None, template="\u2022 {0}", header="", footer=""):
+        super().__init__(name, header=header, footer=footer)
 
         self.items = items or []
         self.template = template
@@ -82,9 +82,11 @@ class BulletedListSection(BaseSection):
     def to_dict(self) -> dict:
         return {
             "items": self.items,
-            "template": self.template
+            "template": self.template,
+            "header": self.header,
+            "footer": self.footer
         }
-    
+
     @staticmethod
     def from_dict(name, data) -> "BulletedListSection":
         return BulletedListSection(name, **data)

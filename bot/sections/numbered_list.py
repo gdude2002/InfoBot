@@ -8,8 +8,8 @@ __author__ = "Gareth Coles"
 
 
 class NumberedListSection(BaseSection):
-    def __init__(self, name, items=None, template="**`{0})`** {1}"):
-        super().__init__(name)
+    def __init__(self, name, items=None, template="**`{0})`** {1}", header="", footer=""):
+        super().__init__(name, header=header, footer=footer)
 
         self.template = template
         self.items = items or []
@@ -83,9 +83,11 @@ class NumberedListSection(BaseSection):
     def to_dict(self) -> dict:
         return {
             "items": self.items,
-            "template": self.template
+            "template": self.template,
+            "header": self.header,
+            "footer": self.footer
         }
-    
+
     @staticmethod
     def from_dict(name, data) -> "NumberedListSection":
         return NumberedListSection(name, **data)

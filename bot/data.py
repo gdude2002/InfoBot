@@ -4,7 +4,7 @@ import os
 import re
 
 from ruamel import yaml
-from typing import List, Union
+from typing import List, Union, Dict, Any
 
 from bot.sections.base import BaseSection
 from bot.sections.bullet_list import BulletedListSection
@@ -100,7 +100,7 @@ class DataManager:
         except Exception:
             log.exception("Error saving server '{}'".format(server_id))
 
-    def load_server(self, server_id):
+    def load_server(self, server_id) -> bool:
         if not os.path.exists("data/{}".format(server_id)):
             return False
 
@@ -116,7 +116,7 @@ class DataManager:
 
         return True
 
-    def load_sections(self, sections: List[Union[str, str, dict]]):
+    def load_sections(self, sections: List[Union[str, str, dict]]) -> List:
         loaded_sections = []
 
         for name, section_type, data in sections:
@@ -126,7 +126,7 @@ class DataManager:
 
         return loaded_sections
 
-    def serialise_sections(self, sections: List[Union[str, BaseSection]]):
+    def serialise_sections(self, sections: List[Union[str, BaseSection]]) -> List:
         unloaded_sections = []
 
         for name, section in sections:
@@ -134,7 +134,7 @@ class DataManager:
 
         return unloaded_sections
 
-    def add_server(self, server_id):
+    def add_server(self, server_id) -> bool:
         if os.path.exists("data/{}".format(server_id)):
             return False
 
@@ -157,7 +157,7 @@ class DataManager:
 
     # Convenience functions
 
-    def get_config(self, server):
+    def get_config(self, server) -> Dict[str, Any]:
         return self.data[server.id]["config"]
 
     def set_config(self, server, key, value):
@@ -175,13 +175,13 @@ class DataManager:
                 sections.pop(i)
                 return
 
-    def get_section_class(self, section_type):
+    def get_section_class(self, section_type) -> type:
         return SECTION_TYPES.get(section_type.lower())
 
-    def get_server_command_chars(self, server):
+    def get_server_command_chars(self, server) -> str:
         return self.data[server.id]["config"]["control_chars"]
 
-    def get_section(self, server, section):
+    def get_section(self, server, section) -> BaseSection:
         section = section.lower()
         sections = self.data[server.id]["sections"]
 
@@ -191,7 +191,7 @@ class DataManager:
 
         return None
 
-    def has_section(self, server, section):
+    def has_section(self, server, section) -> bool:
         section = section.lower()
         sections = self.data[server.id]["sections"]
 
@@ -201,7 +201,7 @@ class DataManager:
 
         return False
 
-    def get_sections(self, server):
+    def get_sections(self, server) -> List[List[Union[BaseSection, str]]]:
         return self.data[server.id]["sections"]
 
     def swap_sections(self, server, left, right):
@@ -226,7 +226,7 @@ class DataManager:
         if left_index >= 0 and right_index >= 0:
             sections[left_index], sections[right_index] = sections[right_index], sections[left_index]
 
-    def get_channel(self, server):
+    def get_channel(self, server) -> str:
         return self.data[server.id]["config"]["info_channel"]
 
     def set_channel(self, server, channel):

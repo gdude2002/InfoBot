@@ -7,8 +7,8 @@ __author__ = "Gareth Coles"
 
 
 class TextSection(BaseSection):
-    def __init__(self, name, text=None):
-        super().__init__(name)
+    def __init__(self, name, text=None, header="", footer=""):
+        super().__init__(name, header=header, footer=footer)
 
         self.text = text or []
 
@@ -64,9 +64,11 @@ class TextSection(BaseSection):
 
     def to_dict(self) -> dict:
         return {
-            "text": self.text
+            "text": self.text,
+            "header": self.header,
+            "footer": self.footer
         }
-    
+
     @staticmethod
     def from_dict(name, data) -> "TextSection":
         return TextSection(name, **data)
