@@ -485,9 +485,14 @@ class Client(discord.client.Client):
 
         data = await result.json()
 
-        await self.send_message(
-            message.channel, "{} Gist created: {}".format(message.author.mention, data["url"])
-        )
+        if "error" in data:
+            await self.send_message(
+                message.channel, "{} An error occurred: {}".format(message.author.mention, data["error"])
+            )
+        else:
+            await self.send_message(
+                message.channel, "{} Gist created: {}".format(message.author.mention, data["url"])
+            )
 
     async def command_update(self, data, data_string, message):
         if not message.author.server_permissions.manage_server:
