@@ -477,7 +477,9 @@ class Client(discord.client.Client):
         session = ClientSession()
         result = await session.post(GIST_CREATE_URL, data={
             "files": {
-                "data.md": content
+                "data.md": {
+                    "content": content
+                }
             }
         })
 
