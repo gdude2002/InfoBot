@@ -16,7 +16,7 @@ class URLSection(BaseSection):
     def __init__(self, name, url=None, header="", footer=""):
         super().__init__(name, header=header, footer=footer)
 
-        self.url = url or []
+        self.url = url or ""
 
     async def process_command(self, command, data, data_string, client, message) -> str:
         if command == "set":
@@ -45,8 +45,12 @@ class URLSection(BaseSection):
                 return "URL set; retrieved `{}` messages' worth of text".format(len(self.cached_lines))
             finally:
                 session.close()
+        if command == "get":
+            if not self.url:
+                return "No URL has been set."
+            return "Current URL: `{}`".format(self.url)
 
-        return "Unknown command: `{}`\n\nAvailable command: `set`".format(command)
+        return "Unknown command: `{}`\n\nAvailable command: `set`, `get`".format(command)
 
     def split_paragraphs(self, text):
         parts = text.split("\n\n")
@@ -61,6 +65,9 @@ class URLSection(BaseSection):
         return line_splitter(done, 2000, split_only=True)
 
     async def render(self) -> List[str]:
+        if not self.url:
+            return ["**A URL has not been set for this section**"]
+
         session = aiohttp.ClientSession()
 
         try:
@@ -68,7 +75,7 @@ class URLSection(BaseSection):
                 text = await resp.text()
             self.cached_lines = self.split_paragraphs(text)
         except Exception as e:
-            return ["**ERROR**: Failed to retrieve URL `{}`: `{}`".format(self.url, e)]
+            return ["**ERROR**: Failed to retrieve URL: `{}`".format(self.url, e)]
         else:
             return self.cached_lines
         finally:
