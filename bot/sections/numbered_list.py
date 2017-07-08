@@ -19,13 +19,31 @@ class NumberedListSection(BaseSection):
     async def process_command(self, command, data, data_string, client, message) -> str:
         if command == "add":
             if len(data) < 1:
-                return "Usage: `add \"List Item\"`"
+                return "Usage: `add \"<List Item>\" \"[List Item ...]\"`"
 
-            if data[0] and len(data[0]) < 200:
-                self.items.append(data[0])
-                client.sections_updated(message.server)
+            added = 0
+            too_long = []
+
+            for i, item in enumerate(data):
+                if len(item) > 200:
+                    too_long.append(i)
+
+                if item:
+                    self.items.append(item)
+                    added += 1
+
+            client.sections_updated(message.server)
+
+            if len(data) > 1:
+                message = "{} list items added".format(added)
+
+                if too_long:
+                    message += "\n\nList items must be shorter than 200 characters. " \
+                               "The following items were too long: `{}`".format(", ".join(too_long))
+
+                return message
+            else:
                 return "List item added"
-            return "List items must be shorter than 200 characters"
         elif command == "remove":
             if not data:
                 return "Usage: `delete <item index>`\n\nNote that indexes start at `1`"
