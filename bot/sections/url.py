@@ -50,7 +50,15 @@ class URLSection(BaseSection):
 
     def split_paragraphs(self, text):
         parts = text.split("\n\n")
-        return line_splitter(parts, 2000)
+        done = []
+
+        for i, part in enumerate(parts):
+            if i < len(parts) - 1:
+                done.append(part + "\n\u200b")
+            else:
+                done.append(part)
+
+        return line_splitter(done, 2000, split_only=True)
 
     async def render(self) -> List[str]:
         session = aiohttp.ClientSession()
