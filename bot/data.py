@@ -11,6 +11,7 @@ from bot.sections.bullet_list import BulletedListSection
 from bot.sections.faq import FAQSection
 from bot.sections.numbered_list import NumberedListSection
 from bot.sections.text import TextSection
+from bot.sections.url import URLSection
 
 __author__ = "Gareth Coles"
 
@@ -32,6 +33,7 @@ If you have any problems, feel free to head over to <https://github.com/gdude200
 SECTION_TYPES = {
     "text": TextSection,
     "faq": FAQSection,
+    "url": URLSection,
     "bulleted_list": BulletedListSection,
     "numbered_list": NumberedListSection
 }
