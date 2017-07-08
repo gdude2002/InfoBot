@@ -12,10 +12,10 @@ class BaseSection:
         self.header = header
         self.footer = footer
 
-    def render(self) -> List[str]:
+    async def render(self) -> List[str]:
         pass
 
-    def show(self) -> List[str]:
+    async def show(self) -> List[str]:
         pass
 
     def to_dict(self) -> dict:
@@ -33,7 +33,7 @@ class BaseSection:
     def get_footer(self) -> str:
         return self.footer
 
-    def process_command(self, command, data, data_string, client, message) -> str:
+    async def process_command(self, command, data, data_string, client, message) -> str:
         return "Not Implemented"
 
     @staticmethod

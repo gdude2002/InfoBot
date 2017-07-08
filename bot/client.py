@@ -8,7 +8,6 @@ import traceback
 
 import asyncio
 import discord
-import json
 
 from aiohttp import ServerDisconnectedError, ClientSession
 from discord import Embed, Colour
@@ -386,7 +385,7 @@ class Client(discord.client.Client):
             ))
 
         try:
-            result = section.process_command(command, data, data_string, self, message)
+            result = await section.process_command(command, data, data_string, self, message)
         except Exception:
             await self.send_message(
                 message.channel,
@@ -468,10 +467,10 @@ Command Breakdown
                 command_set.append("header \"{}\" \"{}\"".format(name, section.get_header()))
                 markdown_set.append(section.get_header())
 
-            for x in section.show():
+            for x in await section.show():
                 command_set.append(x)
 
-            for part in section.render():
+            for part in await section.render():
                 markdown_set.append(part)
 
             if section.get_footer():
@@ -541,7 +540,7 @@ Command Breakdown
                 await self.send_message(channel, section.get_header())
                 await asyncio.sleep(0.2)
 
-            for part in section.render():
+            for part in await section.render():
                 await self.send_message(channel, part)
                 await asyncio.sleep(0.2)
 

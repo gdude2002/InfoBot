@@ -21,7 +21,7 @@ class FAQSection(BaseSection):
 
         self.questions = questions or []
 
-    def process_command(self, command, data, data_string, client, message) -> str:
+    async def process_command(self, command, data, data_string, client, message) -> str:
         if command == "add":
             if len(data) < 2:
                 return "Usage: `add \"<question>\" \"<answer>\"`"
@@ -124,10 +124,10 @@ class FAQSection(BaseSection):
             self.questions[left_index], self.questions[right_index] = self.questions[right_index], \
                                                                       self.questions[left_index]
 
-    def render(self) -> List[str]:
+    async def render(self) -> List[str]:
         return [MESSAGE_FORMAT.format(question, answer) for question, answer in self.questions]
 
-    def show(self) -> List[str]:
+    async def show(self) -> List[str]:
         commands = []
 
         for question, answer in self.questions:

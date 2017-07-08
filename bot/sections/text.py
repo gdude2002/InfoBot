@@ -14,7 +14,7 @@ class TextSection(BaseSection):
 
         self.text = text or []
 
-    def process_command(self, command, data, data_string, client, message) -> str:
+    async def process_command(self, command, data, data_string, client, message) -> str:
         if command == "add":
             if len(data) < 1:
                 return "Usage: `add \"<text>\"`"
@@ -61,10 +61,10 @@ class TextSection(BaseSection):
 
         return "Unknown command: `{}`\n\nAvailable commands: `add`, `remove`, `swap`".format(command)
 
-    def render(self) -> List[str]:
+    async def render(self) -> List[str]:
         return self.text
 
-    def show(self) -> List[str]:
+    async def show(self) -> List[str]:
         commands = []
 
         for line in self.text:

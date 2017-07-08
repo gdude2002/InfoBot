@@ -16,7 +16,7 @@ class BulletedListSection(BaseSection):
         self.items = items or []
         self.template = template
 
-    def process_command(self, command, data, data_string, client, message) -> str:
+    async def process_command(self, command, data, data_string, client, message) -> str:
         if command == "add":
             if len(data) < 1:
                 return "Usage: `add \"List Item\"`"
@@ -78,10 +78,10 @@ class BulletedListSection(BaseSection):
 
         return "Unknown command: `{}`\n\nAvailable commands: `add`, `remove`, `swap`, `template`".format(command)
 
-    def render(self) -> List[str]:
+    async def render(self) -> List[str]:
         return line_splitter([self.template.format(line) for line in self.items], 2000)
 
-    def show(self) -> List[str]:
+    async def show(self) -> List[str]:
         commands = ["section \"{}\" template \"{}\"".format(self.name, self.template)]
 
         for line in self.items:

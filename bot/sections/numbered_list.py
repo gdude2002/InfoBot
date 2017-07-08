@@ -16,7 +16,7 @@ class NumberedListSection(BaseSection):
         self.template = template
         self.items = items or []
 
-    def process_command(self, command, data, data_string, client, message) -> str:
+    async def process_command(self, command, data, data_string, client, message) -> str:
         if command == "add":
             if len(data) < 1:
                 return "Usage: `add \"List Item\"`"
@@ -79,10 +79,10 @@ class NumberedListSection(BaseSection):
 
         return "Unknown command: `{}`\n\nAvailable commands: `add`, `remove`, `swap`, `template`".format(command)
 
-    def render(self) -> List[str]:
+    async def render(self) -> List[str]:
         return line_splitter([self.template.format(i + 1, line) for i, line in enumerate(self.items)], 2000)
 
-    def show(self) -> List[str]:
+    async def show(self) -> List[str]:
         commands = ["section \"{}\" template \"{}\"".format(self.name, self.template)]
 
         for line in self.items:
