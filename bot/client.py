@@ -1059,6 +1059,45 @@ Command Breakdown
                 )
             )
 
+    async def command_note_delete(self, data, data_string, message):
+        if not self.has_permission(message.author):
+            return log.debug("Permission denied")  # No perms
+
+        if len(data) < 1:
+            return await self.send_message(
+                message.channel, "{} Usage: `note-delete \"<note number>\"`".format(message.author.mention)
+            )
+
+        index = data[0]
+
+        note = self.data_manager.get_note(message.server, index)
+
+        if not note:
+            return await self.send_message(
+                message.channel, "{} Unknown note ID: {}".format(message.author.mention, index)
+            )
+
+        self.data_manager.delete_note(message.server, index)
+        self.data_manager.save_server(message.server)
+
+        channel = self.data_manager.get_notes_channel(message.server)
+
+        if channel:
+            try:
+                note_message = await self.get_message(self.get_channel(channel), note["message_id"])
+            except discord.NotFound:
+                note_message = None
+
+            if note_message:
+                await self.delete_message(note_message)
+
+        await self.send_message(
+            message.channel,
+            "{} Note deleted: `{}`".format(
+                message.author.mention, index
+            )
+        )
+
     # Aliases
 
     command_add = command_create

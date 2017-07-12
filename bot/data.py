@@ -77,13 +77,13 @@ class DataManager:
     #     server_id: {
     #         "number": 0,
     #         "notes": {
-    #             0: {
-    #                 "message_id": 0,
+    #             "0": {
+    #                 "message_id": "0",
     #                 "status": "open",
     #                 "text": "",
     #                 "submitted": "",
     #                 "submitter": {
-    #                     "id": 0,
+    #                     "id": "0",
     #                     "name": ""
     #                 }
     #             }
@@ -316,6 +316,9 @@ class DataManager:
 
     def get_note(self, server, index):
         return self.get_notes(server).get(index)
+
+    def delete_note(self, server, index):
+        del self.notes[server.id]["notes"][index]
 
     def update_note(self, server, index, attr, data):
         if attr not in ["text", "submitter"]:
