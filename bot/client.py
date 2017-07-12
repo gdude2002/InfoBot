@@ -232,6 +232,14 @@ class Client(discord.client.Client):
 
         return False
 
+    def has_permission_notes(self, user):
+        if user.server_permissions.manage_messages:
+            return True
+        elif int(user.id) == int(self.config["owner_id"]):
+            return True
+
+        return False
+
     def create_note_embed(self, server, note, index):
         embed = Embed(
             title="{}: {}".format(note["status"].title(), index),
@@ -756,7 +764,7 @@ Command Breakdown
         )
 
     async def command_note(self, data, data_string, message):
-        if not self.has_permission(message.author):
+        if not self.has_permission_notes(message.author):
             return log.debug("Permission denied")  # No perms
 
         if len(data) < 1:
@@ -795,7 +803,7 @@ Command Breakdown
             )
 
     async def command_reopen(self, data, data_string, message):
-        if not self.has_permission(message.author):
+        if not self.has_permission_notes(message.author):
             return log.debug("Permission denied")  # No perms
 
         if len(data) < 1:
@@ -857,7 +865,7 @@ Command Breakdown
             )
 
     async def command_resolve(self, data, data_string, message):
-        if not self.has_permission(message.author):
+        if not self.has_permission_notes(message.author):
             return log.debug("Permission denied")  # No perms
 
         if len(data) < 1:
@@ -919,7 +927,7 @@ Command Breakdown
             )
 
     async def command_close(self, data, data_string, message):
-        if not self.has_permission(message.author):
+        if not self.has_permission_notes(message.author):
             return log.debug("Permission denied")  # No perms
 
         if len(data) < 1:
