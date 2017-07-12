@@ -1,4 +1,5 @@
 # coding=utf-8
+import datetime
 import logging
 import os
 import re
@@ -44,7 +45,13 @@ SECTION_REGEX = re.compile(r"[\d]+[\\/]?")
 
 DEFAULT_CONFIG = {
     "control_chars": "!",
-    "info_channel": None
+    "info_channel": None,
+    "notes_channel": None
+}
+
+DEFAULT_NOTES = {
+    "number": 0,
+    "notes": {}
 }
 
 DEFAULT_SECTIONS = [
@@ -66,6 +73,25 @@ class DataManager:
 
     data = {}
 
+    # notes = {
+    #     server_id: {
+    #         "number": 0,
+    #         "notes": {
+    #             0: {
+    #                 "message_id": 0,
+    #                 "status": "open",
+    #                 "text": "",
+    #                 "submitted": "",
+    #                 "submitter": {
+    #                     "id": 0,
+    #                     "name": ""
+    #                 }
+    #             }
+    #     }
+    # }
+
+    notes = {}
+
     def __init__(self):
         if not os.path.exists("data"):
             os.mkdir("data")
@@ -86,9 +112,12 @@ class DataManager:
         for server_id, data in self.data.items():
             self.save_server(server_id, data)
 
-    def save_server(self, server_id, data=None):
+    def save_server(self, server_id, data=None, notes=None):
         if not data:
             data = self.data[server_id]
+
+        if not notes:
+            notes = self.notes[server_id]
 
         try:
             if not os.path.exists("data/{}".format(server_id)):
@@ -96,6 +125,9 @@ class DataManager:
 
             with open("data/{}/config.yml".format(server_id), "w") as config_fh:
                 yaml.safe_dump(data["config"], config_fh)
+
+            with open("data/{}/notes.yml".format(server_id), "w") as notes_fh:
+                yaml.safe_dump(self.serialise_notes(notes), notes_fh)
 
             with open("data/{}/sections.yml".format(server_id), "w") as sections_fh:
                 yaml.safe_dump(self.serialise_sections(data["sections"]), sections_fh)
@@ -106,15 +138,25 @@ class DataManager:
         if not os.path.exists("data/{}".format(server_id)):
             return False
 
-        log.info("Loading server: {}".format(server_id))
+        log.debug("Loading server: {}".format(server_id))
 
         config = yaml.safe_load(open("data/{}/config.yml".format(server_id), "r"))
         sections = yaml.safe_load(open("data/{}/sections.yml".format(server_id), "r"))
+
+        if os.path.exists("data/{}/notes.yml".format(server_id)):
+            notes = yaml.safe_load(open("data/{}/notes.yml".format(server_id), "r"))
+        else:
+            notes = DEFAULT_NOTES
+
+        if "notes_channel" not in config:
+            config["notes_channel"] = None
 
         self.data[server_id] = {
             "config": config,
             "sections": self.load_sections(sections)
         }
+
+        self.notes[server_id] = notes
 
         return True
 
@@ -136,6 +178,9 @@ class DataManager:
 
         return unloaded_sections
 
+    def serialise_notes(self, notes):
+        return notes  # Future-proofing
+
     def add_server(self, server_id) -> bool:
         if os.path.exists("data/{}".format(server_id)):
             return False
@@ -148,10 +193,15 @@ class DataManager:
         with open("data/{}/sections.yml".format(server_id), "w") as sections_fh:
             yaml.safe_dump(DEFAULT_SECTIONS, sections_fh)
 
+        with open("data/{}/notes.yml".format(server_id), "w") as notes_fh:
+            yaml.safe_dump(DEFAULT_NOTES, notes_fh)
+
         self.data[server_id] = {
             "config": DEFAULT_CONFIG.copy(),
             "sections": self.load_sections(DEFAULT_SECTIONS)
         }
+
+        self.notes[server_id] = DEFAULT_NOTES
 
         log.info("Added server: {}".format(server_id))
 
@@ -206,6 +256,9 @@ class DataManager:
     def get_sections(self, server) -> List[List[Union[BaseSection, str]]]:
         return self.data[server.id]["sections"]
 
+    def get_notes(self, server):
+        return self.notes[server.id]["notes"]
+
     def swap_sections(self, server, left, right):
         left = left.lower()
         right = right.lower()
@@ -231,5 +284,60 @@ class DataManager:
     def get_channel(self, server) -> str:
         return self.data[server.id]["config"]["info_channel"]
 
+    def get_notes_channel(self, server) -> str:
+        return self.data[server.id]["config"]["notes_channel"]
+
     def set_channel(self, server, channel):
         self.data[server.id]["config"]["info_channel"] = channel.id
+
+    def set_notes_channel(self, server, channel):
+        self.data[server.id]["config"]["notes_channel"] = channel.id
+
+    def create_note(self, server, message, text):
+        notes = self.notes[server.id]
+
+        new_index = str(notes["number"] + 1)
+        notes["number"] += 1
+
+        note = {
+            "message_id": None,
+            "status": "open",
+            "text": text,
+            "submitted": datetime.datetime.now(),
+            "submitter": {
+                "id": message.author.id,
+                "name": message.author.name
+            }
+        }
+
+        notes["notes"][new_index] = note
+
+        return new_index, note
+
+    def get_note(self, server, index):
+        return self.get_notes(server).get(index)
+
+    def update_note(self, server, index, attr, data):
+        if attr not in ["text", "submitter"]:
+            return False
+
+        note = self.notes[server.id]["notes"][index]
+
+        if "attr" == "text":
+            note[attr] = data
+        elif attr == "submitter":
+            note[attr] = {
+                "id": data.id,
+                "name": data.name
+            }
+
+        return True
+
+    def set_note_status(self, server, index, status):
+        if status not in ["open", "resolved", "closed"]:
+            return False
+
+        note = self.notes[server.id]["notes"][index]
+        note["status"] = status
+
+        return True
