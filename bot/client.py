@@ -996,6 +996,69 @@ Command Breakdown
                 )
             )
 
+    async def command_note_edit(self, data, data_string, message):
+        if not self.has_permission_notes(message.author):
+            return log.debug("Permission denied")  # No perms
+
+        if len(data) < 2:
+            return await self.send_message(
+                message.channel, "{} Usage: `note-edit \"<note number>\" \"<text>\"`".format(message.author.mention)
+            )
+
+        index, text = data[0], data[1]
+
+        note = self.data_manager.get_note(message.server, index)
+
+        if not note:
+            return await self.send_message(
+                message.channel, "{} Unknown note ID: {}".format(message.author.mention, index)
+            )
+
+        if note["submitter"]["id"] != message.author.id:
+            if not self.has_permission(message.author):
+                return await self.send_message(
+                    message.channel, "{} You may not edit another user's note!".format(message.author.mention)
+                )
+
+        note["text"] = text
+        self.data_manager.save_server(message.server.id)
+
+        channel = self.data_manager.get_notes_channel(message.server)
+
+        if channel:
+            try:
+                note_message = await self.get_message(self.get_channel(channel), note["message_id"])
+            except discord.NotFound:
+                note_message = None
+
+            if not note_message:
+                return await self.send_message(
+                    message.channel,
+                    "{} Note updated: `{}`\n\n**Warning**: The message containing this note has been deleted. Use "
+                    "the `update-notes` command to repopulate the notes channel!".format(
+                        message.author.mention, index
+                    )
+                )
+
+            await self.edit_message(
+                note_message, embed=self.create_note_embed(message.server, note, index)
+            )
+
+            await self.send_message(
+                message.channel,
+                "{} Note updated: `{}`".format(
+                    message.author.mention, index
+                )
+            )
+        else:
+            await self.send_message(
+                message.channel,
+                "{} Note updated: `{}`\n\n**Warning**: No notes channel has been set up. Try the `setup-notes` "
+                "command!".format(
+                    message.author.mention, index
+                )
+            )
+
     # Aliases
 
     command_add = command_create
