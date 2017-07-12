@@ -32,7 +32,8 @@ LOG_COLOURS = {
 
 CONFIG_KEY_DESCRIPTIONS = {
     "control_chars": "Characters that all commands must be prefixed with. You can always mention me as well instead.",
-    "info_channel": "ID for the currently-configured info channel. Use the `setup` command if you want to change this."
+    "info_channel": "ID for the currently-configured info channel. Use the `setup` command if you want to change this.",
+    "notes_channel": "ID for the currently-configured notes channel. Use the `setup` command if you want to change this."
 }
 
 WELCOME_MESSAGE = [
@@ -304,6 +305,13 @@ class Client(discord.client.Client):
             if key == "info_channel":
                 return await self.send_message(
                     message.channel, "{} Please use the `setup` command to change the info channel instead.".format(
+                        message.author.mention
+                    )
+                )
+            elif key == "notes_channel":
+                return await self.send_message(
+                    message.channel,
+                    "{} Please use the `setup-notes` command to change the notes channel instead.".format(
                         message.author.mention
                     )
                 )
