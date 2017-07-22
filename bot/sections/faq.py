@@ -111,9 +111,9 @@ class FAQSection(BaseSection):
         return False
 
     def set_question(self, question, answer):
-        for question_tuple in self.questions:
-            if question_tuple[0].lower() == question.lower():
-                question_tuple[1] = answer
+        for i, q in enumerate(self.questions):
+            if q[0].lower() == question.lower():
+                self.questions[i] = (q[0], answer)
                 return
 
         self.questions.append((question, answer))
