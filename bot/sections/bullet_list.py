@@ -59,6 +59,25 @@ class BulletedListSection(BaseSection):
             self.items.pop(index)
             client.sections_updated(message.server)
             return "Item at index `{}` removed".format(data[0])
+        elif command == "set":
+            if len(data) < 2:
+                return "Usage: `set <index> \"<data>\"`\n\nNote that indexes start at `1`"
+
+            try:
+                left, right = int(data[0]) - 1, data[1]
+            except Exception:
+                return "Usage: `swap <index> \"<data>\"`\n\nNote that indexes start at `1`"
+
+            if left >= len(self.items) or left < 0:
+                return "Unknown index: `{}`\n\nNote that indexes start at `1`".format(data[0])
+
+            if len(right) > 200:
+                return "List items must be shorter than 200 characters."
+
+            self.items[left] = right
+
+            client.sections_updated(message.server)
+            return "Item at index `{}` set to `{}`".format(left, right)
         elif command == "swap":
             if len(data) < 2:
                 return "Usage: `swap <index> <index>`\n\nNote that indexes start at `1`"
@@ -94,7 +113,7 @@ class BulletedListSection(BaseSection):
             client.sections_updated(message.server)
             return "Item template has been updated."
 
-        return "Unknown command: `{}`\n\nAvailable commands: `add`, `remove`, `swap`, `template`".format(command)
+        return "Unknown command: `{}`\n\nAvailable commands: `add`, `remove`, `set`, `swap`, `template`".format(command)
 
     async def render(self) -> List[str]:
         return line_splitter([self.template.format(line) for line in self.items], 2000)
