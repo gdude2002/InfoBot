@@ -83,7 +83,25 @@ class FAQSection(BaseSection):
 
             client.sections_updated(message.server)
             return "Question positions swapped successfully"
-        return "Unknown command: {}\n\nAvailable commands: `add`, `remove`, `set`, `swap`".format(command)
+        elif command == "rename":
+            if len(data) < 2:
+                return "Usage: `rename \"<question>\" \"<new question>\"`"
+
+            left, right = data[0], data[1]
+
+            if not self.has_question(left):
+                return "Unknown question: `{}`".format(left)
+
+            self.rename_question(left, right)
+
+            client.sections_updated(message.server)
+            return "Question has been changed to `{}`".format(right)
+        return "Unknown command: {}\n\nAvailable commands: `add`, `remove`, `rename`, `set`, `swap`".format(command)
+
+    def rename_question(self, question, new_question):
+        for i, q in enumerate(self.questions):
+            if q[0].lower() == question.lower():
+                self.questions[i] = (new_question, q[1])
 
     def has_question(self, question):
         for q, _ in self.questions:
