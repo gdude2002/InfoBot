@@ -12,6 +12,8 @@ more static channels too.
 
 For user documentation, please see [the wiki](https://github.com/gdude2002/InfoBot/wiki).
 
+You can also chat with us [on Discord](https://discord.gg/ZUVSbah).
+
 ---
 
 * Install Python 3.6 or later
