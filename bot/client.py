@@ -130,6 +130,9 @@ class Client(discord.client.Client):
         if message.author.id == self.user.id:
             return
 
+        if str(message.author.discriminator) == "0000":  # Ignore webhooks and system messages
+            return
+
         logger = logging.getLogger(message.server.name)
 
         user = "{}#{}".format(
