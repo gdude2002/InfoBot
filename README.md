@@ -1,3 +1,10 @@
+InfoBot is becoming Smithy!
+===========================
+
+InfoBot in its current state will no longer be developed. Instead, please head on over to the [Smithy project](https://github.com/gdude2002/Smithy), which will contain all of the features you know and love from InfoBot!
+
+You can sill reach us for support on the [Smithy Discord server](https://discord.gg/ZUVSbah) for individual support, or a chat.
+
 InfoBot
 =======
 
@@ -11,6 +18,8 @@ InfoBot is designed with channels like that in mind - although you can easily us
 more static channels too.
 
 For user documentation, please see [the wiki](https://github.com/gdude2002/InfoBot/wiki).
+
+You can also chat with us [on Discord](https://discord.gg/ZUVSbah).
 
 ---
 

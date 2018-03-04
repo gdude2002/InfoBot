@@ -53,7 +53,7 @@ InfoBot is written and maintained by `gdude2002#5318`. If you've got a problem, 
 tracker at <https://github.com/gdude2002/InfoBot>.
 
 To read up on how to use me, you should really take a look at our documentation on the wiki. You can find that here: \
-<https://github.com/gdude2002/InfoBot/wiki>
+<https://github.com/gdude2002/InfoBot/wiki>, or you can join the InfoBot Discord server here: https://discord.gg/ZUVSbah
 """
 
 
@@ -130,6 +130,9 @@ class Client(discord.client.Client):
             return  # DM
 
         if message.author.id == self.user.id:
+            return
+
+        if str(message.author.discriminator) == "0000":  # Ignore webhooks and system messages
             return
 
         logger = logging.getLogger(message.server.name)
