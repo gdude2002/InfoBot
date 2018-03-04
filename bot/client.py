@@ -14,6 +14,7 @@ from discord import Embed, Colour
 from ruamel import yaml
 
 from bot.data import DataManager
+from bot.interpreter import Interpreter
 
 log = logging.getLogger("bot")
 
@@ -63,6 +64,7 @@ class Client(discord.client.Client):
         self.banned_ids = []
         self.config = yaml.safe_load(open("config.yml", "r"))
         self.data_manager = DataManager()
+        self.interpreter = Interpreter(locals(), self)
 
     def get_token(self):
         return self.config["token"]
@@ -267,6 +269,54 @@ class Client(discord.client.Client):
         return embed
 
     # region Commands
+
+    async def command_eval(self, data, data_string, message):
+        if int(message.author.id) != int(self.config["owner_id"]):
+            return
+
+        code = data_string.strip(" ")
+
+        if code.startswith("```") and code.endswith("```"):
+            if code.startswith("```python"):
+                code = code[9:-3]
+            elif code.startswith("```py"):
+                code = code[5:-3]
+            else:
+                code = code[3:-3]
+        elif code.startswith("`") and code.endswith("`"):
+            code = code[1:-1]
+
+        code = code.strip().strip("\n")
+
+        lines = []
+
+        def output(line):
+            lines.append(line)
+
+        self.interpreter.set_output(output)
+
+        try:
+            rvalue = await self.interpreter.runsource(code, message)
+        except Exception as e:
+            await self.send_message(
+                message.channel,
+                "**Error**\n ```{}```\n\n**Code** \n```py\n{}\n```".format(
+                    e, code
+                )
+            )
+        else:
+            out_message = "**Returned** \n```py\n{}\n```\n\n".format(repr(rvalue))
+
+            if lines:
+                out_message += "**Output** \n```\n{}\n```\n\n".format(
+                    "\n".join(lines)
+                )
+
+            out_message += "**Code** \n```py\n{}\n```".format(code)
+
+            await self.send_message(
+                message.channel, out_message
+            )
 
     async def command_config(self, data, data_string, message):
         if not self.has_permission(message.author):
