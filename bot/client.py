@@ -120,6 +120,7 @@ class Client(discord.client.Client):
         log.info("Ready!")
 
     async def on_server_join(self, server):
+        log.info("Server joined: {} ({})\nOwner: {}".format(server.name, server.id, server.owner.name))
         self.data_manager.add_server(server.id)
 
         for message in WELCOME_MESSAGE:
